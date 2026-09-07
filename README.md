@@ -1,3 +1,7 @@
+**🔴 Live Demo:** https://reliefx.stratifyxglobal.com/
+
+---
+
 # Relief Distribution Duplicate Prevention System — Setup Guide
 
 A full-stack project ready to run directly on XAMPP: **HTML + CSS + JavaScript + PHP + MySQL**.
