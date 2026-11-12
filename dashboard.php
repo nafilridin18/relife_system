@@ -47,7 +47,7 @@ foreach ($fairness as $row) {
     if (!isset($areaCoords[$row['area_id']])) continue;
     $ratio = $row['fairness_ratio'] === null ? 0 : (float)$row['fairness_ratio'];
     $mapAreas[] = [
-        'name'       => $row['area_name'],
+        'name'       => tEntity($row['area_name']),
         'lat'        => $areaCoords[$row['area_id']][0],
         'lng'        => $areaCoords[$row['area_id']][1],
         'population' => (int)$row['population'],
@@ -89,7 +89,7 @@ require 'includes/header.php';
       $color = $ratio < 0.5 ? 'var(--alert)' : ($ratio < 1 ? 'var(--warn)' : 'var(--safe)');
   ?>
   <div class="gauge-row">
-    <div class="gauge-label"><?= htmlspecialchars($row['area_name']) ?>
+    <div class="gauge-label"><?= htmlspecialchars(tEntity($row['area_name'])) ?>
       <small><?= t('population') ?>: <?= number_format($row['population']) ?> · <?= t('received') ?>: <?= $row['total_received'] ?> · <?= t('expected') ?>: <?= $row['expected_share'] ?></small>
     </div>
     <div class="gauge-track">
@@ -112,7 +112,7 @@ require 'includes/header.php';
       $pct = $maxNgoCount > 0 ? ($row['dist_count'] / $maxNgoCount) * 100 : 0;
   ?>
   <div class="bar-row">
-    <div class="bar-label"><?= htmlspecialchars($row['ngo_name']) ?></div>
+    <div class="bar-label"><?= htmlspecialchars(tEntity($row['ngo_name'])) ?></div>
     <div class="bar-track"><div class="bar-fill" data-width="<?= $pct ?>"></div></div>
     <div class="bar-val"><?= (int)$row['dist_count'] ?></div>
   </div>

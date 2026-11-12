@@ -67,8 +67,10 @@ require 'includes/header.php';
     <div class="field">
       <label><?= t('relief_item') ?></label>
       <select id="distItem">
-        <?php foreach ($items as $i): $label = $i['item_name'] . ' (' . $i['category'] . ')'; ?>
-          <option value="<?= $i['item_id'] ?>" data-category="<?= $i['category'] ?>" data-unit="<?= htmlspecialchars($i['unit']) ?>" data-label="<?= htmlspecialchars($label) ?>">
+        <?php foreach ($items as $i): 
+          $label = tEntity($i['item_name']) . ' (' . tCategory($i['category']) . ')'; 
+        ?>
+          <option value="<?= $i['item_id'] ?>" data-category="<?= $i['category'] ?>" data-unit="<?= htmlspecialchars(tEntity($i['unit'])) ?>" data-label="<?= htmlspecialchars($label) ?>">
             <?= htmlspecialchars($label) ?>
           </option>
         <?php endforeach; ?>
@@ -84,11 +86,11 @@ require 'includes/header.php';
       <?php if ($user['role'] === 'admin'): ?>
         <select id="distNgo">
           <?php foreach ($ngos as $n): ?>
-            <option value="<?= $n['ngo_id'] ?>"><?= htmlspecialchars($n['ngo_name']) ?></option>
+            <option value="<?= $n['ngo_id'] ?>"><?= htmlspecialchars(tEntity($n['ngo_name'])) ?></option>
           <?php endforeach; ?>
         </select>
       <?php else: ?>
-        <input type="text" id="distNgoFixed" data-ngo-id="<?= (int)$user['ngo_id'] ?>" value="<?= htmlspecialchars($user['ngo_name']) ?>" disabled>
+        <input type="text" id="distNgoFixed" data-ngo-id="<?= (int)$user['ngo_id'] ?>" value="<?= htmlspecialchars(tEntity($user['ngo_name'])) ?>" disabled>
         <div class="note" style="margin-top:6px;"><?= t('ngo_locked_note') ?></div>
       <?php endif; ?>
     </div>
@@ -96,7 +98,7 @@ require 'includes/header.php';
       <label><?= t('distribution_point') ?></label>
       <select id="distPoint">
         <?php foreach ($points as $p): ?>
-          <option value="<?= $p['point_id'] ?>"><?= htmlspecialchars($p['point_name']) ?></option>
+          <option value="<?= $p['point_id'] ?>"><?= htmlspecialchars(tEntity($p['point_name'])) ?></option>
         <?php endforeach; ?>
       </select>
       <a href="#" id="togglePointForm" style="font-size:12px; display:inline-block; margin-top:6px;"><?= t('add_point_toggle') ?></a>
@@ -113,7 +115,7 @@ require 'includes/header.php';
       <select id="quickPickZone">
         <option value=""><?= t('select_placeholder') ?></option>
         <?php foreach ($dangerZones as $z): ?>
-          <option value="<?= $z['upazila_id'] ?>"><?= htmlspecialchars($z['area_name']) ?></option>
+          <option value="<?= $z['upazila_id'] ?>"><?= htmlspecialchars(tEntity($z['area_name'])) ?></option>
         <?php endforeach; ?>
       </select>
     </div>
@@ -123,7 +125,7 @@ require 'includes/header.php';
         <select id="pointDivision">
           <option value=""><?= t('select_placeholder') ?> (<?= t('division_label') ?>)</option>
           <?php foreach ($divisions as $d): ?>
-            <option value="<?= $d['division_id'] ?>"><?= htmlspecialchars($d['division_name']) ?></option>
+            <option value="<?= $d['division_id'] ?>"><?= htmlspecialchars(tEntity($d['division_name'])) ?></option>
           <?php endforeach; ?>
         </select>
         <select id="pointDistrict" disabled>
@@ -161,9 +163,9 @@ require 'includes/header.php';
         <?php foreach ($hist as $h):
           $catClass = strtolower($h['category']); ?>
           <tr>
-            <td><?= htmlspecialchars($h['head_name']) ?></td>
-            <td><?= htmlspecialchars($h['ngo_name']) ?></td>
-            <td><?= htmlspecialchars($h['item_name']) ?> <span class="tag <?= $catClass ?>"><?= $h['category'] ?></span></td>
+            <td><?= htmlspecialchars(tEntity($h['head_name'])) ?></td>
+            <td><?= htmlspecialchars(tEntity($h['ngo_name'])) ?></td>
+            <td><?= htmlspecialchars(tEntity($h['item_name'])) ?> <span class="tag <?= $catClass ?>"><?= tCategory($h['category']) ?></span></td>
             <td class="num"><?= $h['quantity'] ?></td>
             <td class="num"><?= (new DateTime($h['dist_date']))->format('d M') ?></td>
           </tr>

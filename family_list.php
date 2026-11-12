@@ -42,10 +42,10 @@ require 'includes/header.php';
       <?php foreach ($families as $f): ?>
         <tr>
           <td><?= $f['family_id'] ?></td>
-          <td><?= htmlspecialchars($f['head_name']) ?></td>
+          <td><?= htmlspecialchars(tEntity($f['head_name'])) ?></td>
           <td><?= htmlspecialchars($f['phone'] ?? '—') ?></td>
-          <td><?= $f['area_name'] ? htmlspecialchars($f['area_name']) : '—' ?></td>
-          <td><?= $f['upazila_name'] ? htmlspecialchars($f['upazila_name'] . ', ' . $f['district_name']) : '—' ?></td>
+          <td><?= $f['area_name'] ? htmlspecialchars(tEntity($f['area_name'])) : '—' ?></td>
+          <td><?= $f['upazila_name'] ? htmlspecialchars(tEntity($f['upazila_name']) . ', ' . tEntity($f['district_name'])) : '—' ?></td>
           <td><?= $f['family_size'] ?></td>
           <td><span class="hash-chip"><?= substr($f['nid_hash'], 0, 14) ?>…</span> <span class="tag"><?= $f['id_type'] === 'Birth Certificate' ? t('birth_certificate') : 'NID' ?></span></td>
           <td class="num"><?= (new DateTime($f['registered_at']))->format('d M Y, h:i A') ?></td>

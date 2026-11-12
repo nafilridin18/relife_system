@@ -54,7 +54,7 @@ require 'includes/header.php';
       <select id="regDivision">
         <option value=""><?= t('select_placeholder') ?> (<?= t('division_label') ?>)</option>
         <?php foreach ($divisions as $d): ?>
-          <option value="<?= $d['division_id'] ?>"><?= htmlspecialchars($d['division_name']) ?></option>
+          <option value="<?= $d['division_id'] ?>"><?= htmlspecialchars(tEntity($d['division_name'])) ?></option>
         <?php endforeach; ?>
       </select>
       <select id="regDistrict" disabled>
@@ -91,8 +91,8 @@ require 'includes/header.php';
         <tbody>
         <?php foreach ($families as $f): ?>
           <tr>
-            <td><?= htmlspecialchars($f['head_name']) ?></td>
-            <td><?= $f['area_name'] ? htmlspecialchars($f['area_name']) : '—' ?></td>
+            <td><?= htmlspecialchars(tEntity($f['head_name'])) ?></td>
+            <td><?= $f['area_name'] ? htmlspecialchars(tEntity($f['area_name'])) : '—' ?></td>
             <td><?= $f['family_size'] ?></td>
             <td><span class="hash-chip"><?= substr($f['nid_hash'],0,14) ?>…</span></td>
           </tr>
@@ -122,7 +122,7 @@ const BD_UPAZILAS = <?= json_encode(array_map(fn($u) => ['id' => (int)$u['upazil
 const AREA_BY_UPAZILA = <?php
     $map = [];
     foreach ($areasByUpazila as $a) {
-        $map[(string)$a['upazila_id']] = ['area_id' => (int)$a['area_id'], 'area_name' => $a['area_name']];
+        $map[(string)$a['upazila_id']] = ['area_id' => (int)$a['area_id'], 'area_name' => tEntity($a['area_name'])];
     }
     echo json_encode(empty($map) ? new stdClass() : $map);
 ?>;

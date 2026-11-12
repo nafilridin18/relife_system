@@ -51,23 +51,23 @@ $dupStmt->execute([$family['family_id'], $item['category']]);
 $dup = $dupStmt->fetch();
 
 $matchedAsMember = $family['matched_person_role'] === 'Member'
-    ? ['matched_name' => $family['matched_person_name']]
+    ? ['matched_name' => tEntity($family['matched_person_name'])]
     : [];
 
 if ($dup) {
     echo json_encode([
         'status'     => 'duplicate',
-        'head_name'  => $family['head_name'],
-        'area_name'  => $family['area_name'],
+        'head_name'  => tEntity($family['head_name']),
+        'area_name'  => tEntity($family['area_name']),
         'family_size'=> $family['family_size'],
-        'last_ngo'   => $dup['ngo_name'],
+        'last_ngo'   => tEntity($dup['ngo_name']),
         'last_date'  => (new DateTime($dup['dist_date']))->format('d M Y'),
     ] + $matchedAsMember);
 } else {
     echo json_encode([
         'status'      => 'ok',
-        'head_name'   => $family['head_name'],
-        'area_name'   => $family['area_name'],
+        'head_name'   => tEntity($family['head_name']),
+        'area_name'   => tEntity($family['area_name']),
         'family_size' => $family['family_size'],
     ] + $matchedAsMember);
 }

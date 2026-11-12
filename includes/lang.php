@@ -2,13 +2,35 @@
 // Include after config.php — needs the session already started.
 
 function currentLang(): string {
-    $lang = $_SESSION['lang'] ?? 'bn';
+    $lang = $_SESSION['lang'] ?? $_COOKIE['reliefx_lang'] ?? 'bn';
     return in_array($lang, ['bn', 'en'], true) ? $lang : 'bn';
 }
 
+function tCategory(?string $category): string {
+    if (!$category) return '';
+    if (currentLang() === 'en') return $category;
+    $catMap = [
+        'Food'    => 'খাদ্য',
+        'Medical' => 'চিকিৎসা',
+        'Shelter' => 'আশ্রয়',
+        'Cash'    => 'নগদ অর্থ',
+    ];
+    return $catMap[$category] ?? $category;
+}
+
+function tEntity(?string $text): string {
+    if ($text === null || $text === '') return '';
+    if (currentLang() === 'bn') return $text;
+    global $ENTITY_TRANSLATIONS;
+    return $ENTITY_TRANSLATIONS[$text] ?? $text;
+}
+
 function t(string $key): string {
-    global $TRANSLATIONS;
+    global $TRANSLATIONS, $ENTITY_TRANSLATIONS;
     $lang = currentLang();
+    if ($lang === 'en' && isset($ENTITY_TRANSLATIONS[$key])) {
+        return $ENTITY_TRANSLATIONS[$key];
+    }
     return $TRANSLATIONS[$lang][$key] ?? $TRANSLATIONS['bn'][$key] ?? $key;
 }
 
@@ -641,4 +663,104 @@ $TRANSLATIONS = [
     'err_logo_too_large'                          => 'The photo must be under 2MB.',
     'err_logo_type'                                 => 'Only JPG, PNG, or WebP images can be uploaded.',
 ],
+];
+
+$ENTITY_TRANSLATIONS = [
+    // --- Relief Items ---
+    'চাল' => 'Rice',
+    'ডাল' => 'Lentils',
+    'শুকনো খাবার প্যাকেট' => 'Dry Food Packet',
+    'স্যালাইন ও ঔষধ' => 'Saline & Medicine',
+    'কম্বল' => 'Blanket',
+    'তারপুলিন/ত্রিপল' => 'Tarpaulin',
+    'বিশুদ্ধ পানির ট্যাবলেট' => 'Water Purification Tablets',
+    'নগদ অর্থ সহায়তা' => 'Cash Assistance',
+    'চিড়া' => 'Flattened Rice (Chira)',
+    'মুড়ি' => 'Puffed Rice (Muri)',
+    'খাবার পানি (বোতলজাত)' => 'Drinking Water (Bottled)',
+    'শিশুখাদ্য (গুঁড়া দুধ)' => 'Baby Food (Milk Powder)',
+    'স্যানিটারি ন্যাপকিন' => 'Sanitary Napkins',
+    'ফার্স্ট এইড বক্স' => 'First Aid Box',
+    'মশারি' => 'Mosquito Net',
+    'মোমবাতি ও দিয়াশলাই' => 'Candles & Matches',
+    'টর্চ লাইট' => 'Torch Light',
+    'দড়ি' => 'Rope',
+
+    // --- Units ---
+    'কেজি' => 'kg',
+    'প্যাকেট' => 'packet',
+    'পিস' => 'piece',
+    'টাকা' => 'BDT',
+    'লিটার' => 'liter',
+    'বক্স' => 'box',
+
+    // --- NGOs ---
+    'আশা ফাউন্ডেশন' => 'Asha Foundation',
+    'রিলিফ বাংলাদেশ' => 'Relief Bangladesh',
+    'সেভ দ্য ফ্লাড ভিকটিমস' => 'Save the Flood Victims',
+    'মানবিক সহায়তা সংস্থা' => 'Humanitarian Assistance Organization',
+    'উত্তরণ ফাউন্ডেশন' => 'Uttaran Foundation',
+    'প্রত্যাশা রিলিফ টিম' => 'Prottasha Relief Team',
+
+    // --- Relief Zones / Areas ---
+    'সুনামগঞ্জ সদর' => 'Sunamganj Sadar',
+    'কুড়িগ্রাম চর' => 'Kurigram Char',
+    'গাইবান্ধা উত্তর' => 'Gaibandha North',
+    'সিলেট কোম্পানীগঞ্জ' => 'Sylhet Companiganj',
+    'নেত্রকোণা দুর্গাপুর' => 'Netrokona Durgapur',
+    'জামালপুর ইসলামপুর' => 'Jamalpur Islampur',
+    'বগুড়া সারিয়াকান্দি' => 'Bogra Sariakandi',
+    'রংপুর কাউনিয়া' => 'Rangpur Kaunia',
+    'সুনামগঞ্জ' => 'Sunamganj',
+    'কুড়িগ্রাম' => 'Kurigram',
+    'গাইবান্ধা' => 'Gaibandha',
+    'সিলেট' => 'Sylhet',
+    'নেত্রকোণা' => 'Netrokona',
+    'জামালপুর' => 'Jamalpur',
+    'বগুড়া' => 'Bogra',
+    'রংপুর' => 'Rangpur',
+    'সুনামগঞ্জ (হাওর অঞ্চল)' => 'Sunamganj (Haor Region)',
+    'কুড়িগ্রাম (চরাঞ্চল)' => 'Kurigram (Char Region)',
+    'কুড়িগ্রাম (চরাঞ্চল)' => 'Kurigram (Char Region)',
+    'গাইবান্ধা (চরাঞ্চল)' => 'Gaibandha (Char Region)',
+    'সিলেট সদর ও সংলগ্ন' => 'Sylhet Sadar & Adjacent',
+    'নেত্রকোণা (হাওর)' => 'Netrokona (Haor)',
+    'জামালপুর (যমুনা অববাহিকা)' => 'Jamalpur (Jamuna Basin)',
+    'বগুড়া (যমুনা পাড়)' => 'Bogra (Jamuna Bank)',
+    'রংপুর (তিস্তা অববাহিকা)' => 'Rangpur (Teesta Basin)',
+
+    // --- Distribution Points ---
+    'সুনামগঞ্জ ইউনিয়ন পরিষদ' => 'Sunamganj Union Parishad',
+    'সুনামগঞ্জ প্রাথমিক বিদ্যালয়' => 'Sunamganj Primary School',
+    'কুড়িগ্রাম হাই স্কুল মাঠ' => 'Kurigram High School Ground',
+    'কুড়িগ্রাম হাই স্কুল মাঠ' => 'Kurigram High School Ground',
+    'গাইবান্ধা কলেজ ক্যাম্পাস' => 'Gaibandha College Campus',
+    'সিলেট কমিউনিটি সেন্টার' => 'Sylhet Community Centre',
+    'সিলেট রেলস্টেশন চত্বর' => 'Sylhet Railway Station Ground',
+    'নেত্রকোণা বাজার চত্বর' => 'Netrokona Market Square',
+    'জামালপুর উপজেলা মাঠ' => 'Jamalpur Upazila Ground',
+    'বগুড়া সারিয়াকান্দি ঘাট' => 'Bogra Sariakandi Ghat',
+    'রংপুর কাউনিয়া বাজার' => 'Rangpur Kaunia Market',
+
+    // --- Demo Family Heads ---
+    'রহিম উদ্দিন' => 'Rahim Uddin',
+    'করিম মিয়া' => 'Karim Mia',
+    'ফাতেমা বেগম' => 'Fatema Begum',
+    'জোবেদা খাতুন' => 'Zobeda Khatun',
+    'আব্দুল হালিম' => 'Abdul Halim',
+    'সালমা আক্তার' => 'Salma Akter',
+    'নুরুল ইসলাম' => 'Nurul Islam',
+    'রোকেয়া বেগম' => 'Rokeya Begum',
+    'মোজাম্মেল হক' => 'Mojammel Haque',
+    'তাহেরা খাতুন' => 'Tahera Khatun',
+    'আনোয়ার হোসেন' => 'Anowar Hossain',
+    'মরিয়ম বিবি' => 'Moriam Bibi',
+    'শাহজাহান আলী' => 'Shahjahan Ali',
+    'নাসরিন আক্তার' => 'Nasrin Akter',
+    'দেলোয়ার হোসেন' => 'Delwar Hossain',
+    'রাবেয়া খাতুন' => 'Rabeya Khatun',
+    'ইউসুফ আলী' => 'Yusuf Ali',
+    'সুরাইয়া বেগম' => 'Suraiya Begum',
+    'জাহাঙ্গীর আলম' => 'Jahangir Alam',
+    'হালিমা খাতুন' => 'Halima Khatun',
 ];

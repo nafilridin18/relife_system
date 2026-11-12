@@ -43,7 +43,7 @@ const CSRF_TOKEN = <?= json_encode(csrfToken()) ?>;
     </div>
     <?php if ($user): ?>
     <span class="role-badge">
-      <?= $user['role']==='admin' ? 'Admin' : htmlspecialchars($user['ngo_name'] ?? 'NGO Operator') ?>
+      <?= $user['role']==='admin' ? 'Admin' : htmlspecialchars(tEntity($user['ngo_name'] ?? 'NGO Operator')) ?>
       — <?= htmlspecialchars($user['username']) ?>
     </span>
     <a href="logout.php"><?= t('logout') ?></a>

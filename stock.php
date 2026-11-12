@@ -54,10 +54,10 @@ require 'includes/header.php';
           $low = (float)$s['quantity_available'] < 20;
       ?>
         <tr>
-          <?php if ($user['role'] === 'admin'): ?><td><?= htmlspecialchars($s['ngo_name']) ?></td><?php endif; ?>
-          <td><?= htmlspecialchars($s['item_name']) ?> <span class="tag <?= strtolower($s['category']) ?>"><?= $s['category'] ?></span></td>
+          <?php if ($user['role'] === 'admin'): ?><td><?= htmlspecialchars(tEntity($s['ngo_name'])) ?></td><?php endif; ?>
+          <td><?= htmlspecialchars(tEntity($s['item_name'])) ?> <span class="tag <?= strtolower($s['category']) ?>"><?= tCategory($s['category']) ?></span></td>
           <td class="num" style="<?= $low ? 'color:var(--alert);font-weight:700;' : '' ?>" id="qty-<?= $s['ngo_id'] ?>-<?= $s['item_id'] ?>">
-            <?= number_format($s['quantity_available'], 2) ?> <?= htmlspecialchars($s['unit']) ?>
+            <?= number_format($s['quantity_available'], 2) ?> <?= htmlspecialchars(tEntity($s['unit'])) ?>
           </td>
           <td>
             <div style="display:flex; gap:6px;">
