@@ -265,6 +265,24 @@ relief_system/
     Open `sos_portal.php` in a private/incognito window (no login required). Click **"Use My Live Location"** to fetch GPS coordinates
     via the browser Geolocation API, check the required relief supplies (Boat, Medical, Food), and click **Transmit Emergency SOS Signal**.
     The form submits to `POST /api/v1/sos-request`, grouping the caller into a tactical 50m spatial cluster (Rescue Node) and providing immediate visual feedback with rescue dispatch coordinates and emergency hotlines (999, 1090, 16163).
+12. **Multi-Role Login & Persona Switcher (v3.0 — New):** On `index.php`, interact with the role tabs:
+    - **Admin Tab:** Auto-fills credentials for the District Relief Officer (`admin` / `Admin@123`).
+    - **NGO Tab:** Offers quick 1-click credential badges for field operators (`asha_operator`, `relief_operator`, `humanity_operator` / `operator123`).
+    - **Citizen Tab:** Allows beneficiaries to log in using their raw National ID (`1985011234501`), mobile phone (`01711234501`), or username + password (`Citizen@123`).
+    - **Guest Tab:** Bypasses password fields entirely, providing instant 1-click access to the public transparency portal.
+13. **Citizen Self-Registration & Distribution History (v3.0 — Citizen Facing):**
+    Open `register_user.php`, submit Head Name, NID/Birth Certificate, Phone, Upazila, and Family Size. The system hashes the NID with salted SHA-256, connects or instantiates the `family` record, auto-verifies the citizen, and opens `citizen_dashboard.php`. Here, beneficiaries review their complete historical receipt log (date, item, quantity, NGO name, distribution point).
+14. **Category Cooldown & 5-Day Emergency Relief Unlock (v3.0 — Citizen Facing):**
+    On `citizen_dashboard.php`, visual eligibility cards track the 7-day duplicate prevention rule per category (Food, Shelter, Medical, Cash). The **Special Emergency Relief Application** form strictly enforces the 5-day rule: if the last distribution was received $< 5$ days ago, the form displays a locked countdown banner; after 5 days, the form unlocks and writes directly to `emergency_relief_request` with real-time status tracking (`PENDING`, `APPROVED`, `DISPATCHED`, `REJECTED`).
+15. **Public Relief Transparency Log & Next Distribution Cycles (v3.0 — Guest Facing):**
+    Open `guest_dashboard.php` without authentication. The area-wise transparency table groups real distribution data by Upazila/District, displaying:
+    - Area/Upazila name (e.g. Sariakandi, Chilmari, Sunamganj Sadar)
+    - Last distribution timestamp and relative elapsed days
+    - Distributing partner NGOs (e.g. Asha Foundation, Relief Bangladesh)
+    - Estimated **Next Distribution Cycle** (calculated 7 days post-distribution)
+    - Live searchable filter by Upazila/District.
+16. **Hydrological Weather & Flood Warning System (v3.0 — Public Facing):**
+    Navigate to `weather_alerts.php`. The portal monitors 6 strategic hydrological stations (Kurigram Char/Dharla, Sunamganj Haor/Surma, Sylhet Sadar, Jamalpur/Jamuna, Gaibandha/Brahmaputra, Feni/Muhuri) with live river gauges, danger mark deltas, 3-day rainfall forecasts, and designated evacuation shelters.
 
 ## 5. Mapping to Guideline Components
 
