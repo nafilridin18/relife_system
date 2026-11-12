@@ -24,61 +24,115 @@ This system solves both problems at the database level (via trigger + procedure 
 3. Custom Unicode-aware fuzzy matching for Bengali names (`mb_levenshtein()`, because PHP's built-in `levenshtein()` and MySQL's `SOUNDEX()` don't work for Bengali).
 4. Population-proportional fairness dashboard, based on the `v_area_fairness` VIEW.
 
-## 1. Setup (5 steps)
+## 1. Setup
 
-1. Copy the entire `relief_system` folder into XAMPP's `htdocs` folder
-   (path will look like: `C:\xampp\htdocs\relief_system\` or `/Applications/XAMPP/htdocs/relief_system/`)
+### Option A: Using XAMPP (Apache + MySQL)
+
+1. Copy the entire `relief_system` folder into XAMPP's `htdocs` folder:
+   - Windows: `C:\xampp\htdocs\relief_system\` (or create a directory junction: `mklink /J C:\xampp\htdocs\relief_system <project_path>`)
+   - macOS: `/Applications/XAMPP/htdocs/relief_system/`
 2. From the XAMPP Control Panel, start both **Apache** and **MySQL**
-3. Open `http://localhost/phpmyadmin` in your browser → **Import** tab → select the `database.sql` file → click **Go**
-   (this creates the `relief_db` database and inserts all tables + triggers + procedures + views + 20+ families and 28 distribution records)
-4. Go to `http://localhost/relief_system/install.php` in your browser — this creates the login accounts (run this only once)
-5. **Delete install.php** (for security — an install script should never be left open), then open `http://localhost/relief_system/`
+3. Open `http://localhost/phpmyadmin` in your browser → **Import** tab → select `database.sql` (ensure character set is set to **utf8mb4**) → click **Go**
+   - Alternatively via terminal (prevents Windows ANSI/CP1252 encoding issues):
+     ```bash
+     mysql --default-character-set=utf8mb4 -u root -p relief_db < database.sql
+     ```
+   *(this creates `relief_db` and loads all tables, triggers, stored procedures, views, and initial seed data)*
+4. Open `http://localhost/relief_system/install.php` in your browser — this creates the initial admin and operator accounts (run this only once)
+5. Open `http://localhost/relief_system/` to access the application.
 
-> **Optional (Version 2.0+):** DB credentials and the NID hashing salt are no longer hardcoded — they're now read from an `.env` file (see §7.2).
-> The repo includes `.env.example` as a template — copy it to `.env` and edit as needed. If `.env` doesn't exist, the system
-> falls back to the previous hardcoded defaults, so skipping this step won't break the setup.
+### Option B: Using PHP Built-in Development Server
+
+1. Ensure MySQL is running (e.g. from XAMPP or standalone service).
+2. Configure `.env` if your MySQL port differs from standard 3306 (e.g. `DB_HOST=127.0.0.1;port=3307`).
+3. Import `database.sql` with utf8mb4 character set:
+   ```bash
+   mysql --default-character-set=utf8mb4 -u root -P 3307 -h 127.0.0.1 -e "source database.sql"
+   ```
+4. Run the installer:
+   ```bash
+   php install.php
+   ```
+5. Start the server from the project directory:
+   ```bash
+   php -S localhost:8000
+   ```
+6. Open **`http://localhost:8000`** in your browser.
+
+> **Environment Variables (`.env`):**
+> DB credentials, ports, and the NID hashing salt are read from `.env` (see §7.2).
+> The repository includes `.env.example` as a template — copy it to `.env` and adjust as needed. If `.env` is absent, the system seamlessly falls back to default localhost parameters.
 
 ## 2. Login credentials
 
-| Username | Password | Role |
-|---|---|---|
-| `admin` | `Admin@123` | District Relief Officer (can see everything) |
-| `asha_operator` | `Ngo@123` | Operator for Asha Foundation |
-| `relief_operator` | `Ngo@123` | Operator for Relief Bangladesh |
-| `sfv_operator` | `Ngo@123` | Operator for Save the Flood Victims |
+| Username | Password | Role | Description |
+|---|---|---|---|
+| `admin` | `Admin@123` | District Relief Officer | Full admin access (Dashboard, Audit Log, All Families) |
+| `asha_operator` | `Ngo@123` | Operator for Asha Foundation | Relief entry & family registration |
+| `relief_operator` | `Ngo@123` | Operator for Relief Bangladesh | Relief entry & family registration |
+| `sfv_operator` | `Ngo@123` | Operator for Save the Flood Victims | Relief entry & family registration |
 
-## 3. File Structure
+## 3. Complete File Structure
 
 ```
 relief_system/
-├── database.sql              ← schema + triggers + procedure + views + seed data (import this first)
-├── config.php                ← DB connection + hashNID() + mb_levenshtein() + .env loader
-├── .env                       ← real secrets (gitignored — create it on your own machine, or defaults will be used)
-├── .env.example                ← template for .env, this one is committed
-├── .gitignore                   ← excludes .env from version control
-├── .htaccess                      ← blocks direct browser access to dotfiles (.env etc.)
-├── install.php                ← run once to create accounts, then delete
-├── index.php                  ← Login page
-├── logout.php
-├── distribute.php             ← main page: NID → live duplicate check → calls sp_distribute_relief()
-├── register_family.php        ← family registration + fuzzy name matching + identity conflict check
-├── dashboard.php               ← Admin-only: fairness gauge + NGO performance + weekly trend chart
-├── duplicate_log.php           ← Admin-only: blocked attempt history + lookup audit trail
-├── stock.php                    ← Admin-only: view NGO-wise stock and restock
-├── includes/
-│   ├── auth.php                ← requireLogin() / requireRole() / csrfToken() / requireCsrf()
-│   ├── env.php                  ← small .env parser (no composer dependency)
-│   ├── header.php               ← role-aware nav bar + CSRF_TOKEN JS constant
-│   └── footer.php
-├── api/                          ← AJAX endpoints (called via fetch() from the browser, all CSRF-protected)
-│   ├── check_duplicate.php       ← read-only lookup — resolves by head or member, any NID/BRC
-│   ├── fuzzy_check.php
-│   ├── save_family.php           ← does identity-conflict check before insert
-│   ├── save_distribution.php     ← the only place from which distributions are inserted
-│   ├── save_distribution_point.php
-│   └── save_stock.php             ← admin-only: adds quantity to ngo_stock
-├── css/style.css
-└── js/app.js
+├── .env                              ← real environment variables & secrets (gitignored)
+├── .env.example                       ← committed template for environment variables
+├── .gitignore                          ← excludes sensitive and cache files from git
+├── .htaccess                             ← blocks direct web access to sensitive dotfiles
+├── Project_Report.docx                   ← comprehensive academic/DBMS project documentation
+├── README.md                             ← complete system guide and technical documentation
+├── database.sql                         ← schema + triggers + procedures + views + seed data (UTF-8)
+├── queries_for_report.sql                ← analytic SQL queries for DBMS reporting
+├── roles_optional.sql                    ← optional database-level user privilege grants
+├── er_diagram.png                        ← high-resolution Entity-Relationship diagram
+├── config.php                            ← DB PDO connection, hashNID(), mb_levenshtein(), env loader
+├── install.php                           ← one-time account setup script (seeds admin & operators)
+├── index.php                             ← landing page and login portal
+├── logout.php                            ← terminates session and redirects to login
+├── distribute.php                        ← core relief distribution workflow & live duplicate check
+├── register_family.php                   ← beneficiary registration with fuzzy match & cross-check
+├── family_list.php                       ← admin-only: complete registry of all enrolled families
+├── dashboard.php                         ← admin-only: fairness gauge, NGO performance & live map
+├── duplicate_log.php                     ← admin-only: audit log of blocked duplicates & lookup trail
+├── stock.php                             ← NGO inventory tracking & restock management
+├── register_ngo.php                      ← public self-registration for partner NGOs
+├── verify_email.php                      ← 6-digit verification code entry for new NGOs
+├── forgot_password.php                   ← automated email password reset workflow
+├── profile.php                           ← NGO organization profile & custom logo upload
+├── switch_lang.php                       ← language switcher (BN / EN) with session & cookie memory
+├── api/                                  ← AJAX endpoints (CSRF-protected & session-verified)
+│   ├── check_duplicate.php               ← live family & 7-day category duplicate check
+│   ├── fuzzy_check.php                   ← Unicode-aware Levenshtein duplicate name detector
+│   ├── save_family.php                   ← family registration with cross-check identity protection
+│   ├── save_distribution.php             ← atomic relief distribution caller for sp_distribute_relief
+│   ├── save_distribution_point.php       ← registers new distribution points associated with an upazila
+│   ├── save_ngo_profile.php              ← updates NGO contact information & logo file
+│   └── save_stock.php                    ← adds inventory quantity to an NGO-item pair
+├── css/
+│   └── style.css                         ← responsive dark/light glassmorphic UI stylesheet
+├── js/
+│   ├── app.js                            ← frontend logic, AJAX lookups, Leaflet map & UI animations
+│   ├── auth.js                           ← authentication validations, tabs, and login helpers
+│   └── theme.js                          ← dark/light mode toggle with localStorage persistence
+├── img/
+│   ├── logo-icon.png                     ← circular ReliefX brand emblem & favicon
+│   ├── logo-full.jpeg                    ← full ReliefX emblem and typography wordmark
+│   ├── dashboard-preview.png             ← fairness dashboard UI mock preview
+│   └── distribute-preview.png            ← relief entry workflow UI mock preview
+└── includes/
+    ├── auth.php                          ← RBAC enforcement, session authentication, CSRF protection
+    ├── auth_brand.php                    ← unified layout wrapper for authentication pages
+    ├── env.php                           ← lightweight .env parser without external dependencies
+    ├── header.php                        ← global navigation bar, language switcher & CSRF bridge
+    ├── footer.php                        ← global footer & base script inclusions
+    ├── icons.php                         ← lightweight SVG icon renderer (Feather icon set)
+    ├── lang.php                          ← bilingual translation engine (UI + dynamic database entities)
+    ├── mailer.php                        ← SMTP email helper for verification & password reset codes
+    └── PHPMailer/                        ← embedded PHPMailer library
+        ├── Exception.php
+        ├── PHPMailer.php
+        └── SMTP.php
 ```
 
 ## 4. What to Demonstrate in the Viva
@@ -326,3 +380,9 @@ sequenceDiagram
 - **🗺️ Relief Zone Map (dashboard.php):** Leaflet.js + OpenStreetMap (no API key needed) shows the 8 relief zones on a map of Bangladesh — marker color reflects the fairness ratio (red/yellow/green), marker size reflects population. Each area's lat/lng is hardcoded as a PHP array in `dashboard.php` (no new DB column was added, since these 8 areas are fixed reference data).
 - **Accent color:** The logo's orange color (`--accent`) was added as the new brand accent (used for the active tab underline, `.btn-accent`, etc.).
 - **Code-based email verification:** `register_ngo.php` used to send a verification link (which had to be clicked); it now sends a 6-digit code instead (via `includes/mailer.php`), and `verify_email.php` requires entering email+code to verify — direct code entry instead of a phishing-prone link-click flow.
+
+### 7.7 Dynamic Bilingual Localization & Character Encoding Fix (Version 2.1)
+
+- **Dynamic Entity Translation:** Previously, switching between Bengali (`বাংলা`) and English (`EN`) only translated static interface labels, while stored database values (relief items, NGO names, distribution points, relief zones, units, and family head names) remained in Bengali. Version 2.1 introduces `tEntity()` and `tCategory()` in `includes/lang.php` with an entity dictionary. When English is selected, items like `চাল (Food)` dynamically render as `Rice (Food)`, `আশা ফাউন্ডেশন` becomes `Asha Foundation`, and table records adapt to the active language.
+- **Language Preference Persistence:** Language selection in `switch_lang.php` now saves to both `$_SESSION['lang']` and a long-lived browser cookie (`reliefx_lang`), ensuring language preferences persist across reloads, new tabs, and browser restarts.
+- **UTF-8mb4 Character Encoding Protection:** Windows command shell redirection previously caused `database.sql` to import using ANSI/CP1252 codepages, producing Mojibake corruption on Bengali Unicode strings. The database is now strictly imported with `--default-character-set=utf8mb4` to ensure Bengali characters render in clean Hind Siliguri typography.
