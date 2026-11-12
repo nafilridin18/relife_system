@@ -282,3 +282,4 @@ echo json_encode([
     'critical_count' => count(array_filter($stations, fn($s) => $s['alert_level'] === 'CRITICAL')),
     'stations'       => $stations
 ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
