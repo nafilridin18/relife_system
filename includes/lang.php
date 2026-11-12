@@ -268,10 +268,12 @@ $TRANSLATIONS = [
     'th_registered_at'                 => 'নিবন্ধনের সময়',
 
     // ---- duplicate log page ----
+    'dup_log_h2'          => 'ডুপ্লিকেট বিতরণ প্রচেষ্টার অডিট লগ',
     'dup_log_sub'         => 'যখনই কোনো NGO একই পরিবারকে একই ক্যাটাগরির ত্রাণ ৭ দিনের মধ্যে দ্বিতীয়বার দিতে চেষ্টা করে, সিস্টেম স্বয়ংক্রিয়ভাবে সেটা ব্লক করে এখানে লগ করে — গোপনীয়তার জন্য NID নয়, শুধু এর hash সংরক্ষিত হয়।',
     'dup_log_empty'         => 'এখনো কোনো duplicate attempt block হয়নি।',
     'th_attempted_ngo'        => 'যে NGO চেষ্টা করেছিল',
     'th_reason'                 => 'কারণ',
+    'kpi_my_stock'              => 'আমার NGO মজুদ (একক)',
     'audit_h2'                    => 'Lookup Audit Trail',
     'audit_sub'                     => '"ত্রাণ বিতরণ" পেজে NID টাইপ করার সাথে সাথে যত লুকআপ হয়েছে তার সবগুলো এখানে — কোন NGO কার NID/জন্ম নিবন্ধন দিয়ে খুঁজেছে, আর সেটা কোন পরিবার/সদস্যের সাথে মিলেছে।',
     'audit_empty'                     => 'এখনো কোনো lookup হয়নি।',
@@ -580,10 +582,12 @@ $TRANSLATIONS = [
     'th_phone'                       => 'Phone',
     'th_registered_at'                 => 'Registered At',
 
+    'dup_log_h2'          => 'Duplicate Distribution Attempt Audit Log',
     'dup_log_sub'         => 'Whenever an NGO tries to give the same family relief in the same category a second time within 7 days, the system automatically blocks it and logs it here — for privacy, only the hash is stored, never the plain NID.',
     'dup_log_empty'         => 'No duplicate attempts have been blocked yet.',
     'th_attempted_ngo'        => 'NGO that attempted',
     'th_reason'                 => 'Reason',
+    'kpi_my_stock'              => 'My NGO Stock (Units)',
     'audit_h2'                    => 'Lookup Audit Trail',
     'audit_sub'                     => 'Every lookup made while typing an NID on the "Relief Distribution" page — which NGO searched by which NID/Birth Certificate, and which family/member it resolved to.',
     'audit_empty'                     => 'No lookups yet.',

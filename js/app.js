@@ -712,55 +712,70 @@ function renderFloodPrediction(data) {
   const container = document.getElementById('aiPredictionContent');
   if (!container) return;
 
+  const isBn = ((typeof CUR_LANG !== 'undefined' ? CUR_LANG : 'bn') === 'bn');
   const levelClass = data.risk_level.toLowerCase();
   const deltaColor = data.delta_above_danger_m > 0 ? 'var(--alert)' : 'var(--safe)';
   const deltaSign = data.delta_above_danger_m > 0 ? `+${data.delta_above_danger_m}m` : `${data.delta_above_danger_m}m`;
+
+  const riskLabel = isBn ? `${escapeHtml(data.risk_level)} ঝুঁকি` : `${escapeHtml(data.risk_level)} Risk`;
+  const severityLabel = isBn ? `${data.risk_score}% তীব্রতা` : `${data.risk_score}% Severity`;
+  const confidenceLabel = isBn ? `নির্ভরযোগ্যতা: ${(data.confidence_score * 100).toFixed(0)}%` : `Confidence: ${(data.confidence_score * 100).toFixed(0)}%`;
+  const deltaTitle = isBn ? 'বিপদসীমার পার্থক্য' : 'DANGER LEVEL DELTA';
+  const deltaSuffix = isBn ? 'বিপদসীমার উপরে' : 'above mark';
+  const curWaterTitle = isBn ? 'বর্তমান পানির স্তর' : 'Current Water Level';
+  const dangerMarkLabel = isBn ? `বিপদসীমা: ${data.danger_level_m}m` : `Danger mark: ${data.danger_level_m}m`;
+  const rainTitle = isBn ? '২৪ ঘণ্টার বৃষ্টিপাত পূর্বাভাস' : '24h Rainfall Forecast';
+  const rainSub = isBn ? 'ভারী বর্ষণ সম্ভাবনা' : 'Heavy monsoon downpour';
+  const influxTitle = isBn ? 'উজান থেকে নদী প্রবাহ' : 'Upstream Basin Influx';
+  const influxSub = isBn ? 'ব্রহ্মপুত্র/সুরমা অববাহিকা' : 'Brahmaputra/Surma basin';
+  const trendTitle = isBn ? '৪৮ ঘণ্টার নদী গতিবিধি' : '48h Trend Projection';
+  const actionHeader = isBn ? 'AI সুপারিশকৃত জরুরি পদক্ষেপ:' : 'AI Recommended Tactical Action:';
 
   container.innerHTML = `
     <div class="ai-risk-banner ${levelClass}">
       <div>
         <div style="font-size:11.5px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">
-          PREDICTED RISK LEVEL · ${escapeHtml(data.zone_name)}
+          ${isBn ? 'পূর্বাভাসকৃত ঝুঁকির মাত্রা' : 'PREDICTED RISK LEVEL'} · ${escapeHtml(data.zone_name)}
         </div>
         <div style="display:flex;align-items:center;gap:12px;">
-          <span style="font-size:28px;font-weight:800;letter-spacing:-.01em;">${escapeHtml(data.risk_level)} Risk</span>
-          <span class="tag alert" style="font-size:13px;padding:4px 10px;">${data.risk_score}% Severity</span>
-          <span style="font-size:11px;color:var(--ink-soft);">Confidence: ${(data.confidence_score * 100).toFixed(0)}%</span>
+          <span style="font-size:28px;font-weight:800;letter-spacing:-.01em;">${riskLabel}</span>
+          <span class="tag alert" style="font-size:13px;padding:4px 10px;">${severityLabel}</span>
+          <span style="font-size:11px;color:var(--ink-soft);">${confidenceLabel}</span>
         </div>
       </div>
       <div style="text-align:right;">
-        <div style="font-size:11px;color:var(--ink-soft);font-weight:600;">DANGER LEVEL DELTA</div>
+        <div style="font-size:11px;color:var(--ink-soft);font-weight:600;">${deltaTitle}</div>
         <div style="font-size:24px;font-weight:700;color:${deltaColor};font-family:'Space Grotesk',sans-serif;">
-          ${deltaSign} <span style="font-size:13px;color:var(--ink-soft);">above mark</span>
+          ${deltaSign} <span style="font-size:13px;color:var(--ink-soft);">${deltaSuffix}</span>
         </div>
       </div>
     </div>
 
     <div class="ai-metric-grid">
       <div class="ai-metric-box">
-        <div class="label">Current Water Level</div>
+        <div class="label">${curWaterTitle}</div>
         <div class="val">${data.water_level_m} <span style="font-size:14px;color:var(--ink-soft);">m</span></div>
-        <div class="subtext">Danger mark: ${data.danger_level_m}m</div>
+        <div class="subtext">${dangerMarkLabel}</div>
       </div>
       <div class="ai-metric-box">
-        <div class="label">24h Rainfall Forecast</div>
+        <div class="label">${rainTitle}</div>
         <div class="val" style="color:var(--water);">${data.rainfall_forecast_24h_mm} <span style="font-size:14px;color:var(--ink-soft);">mm</span></div>
-        <div class="subtext">Heavy monsoon downpour</div>
+        <div class="subtext">${rainSub}</div>
       </div>
       <div class="ai-metric-box">
-        <div class="label">Upstream Basin Influx</div>
+        <div class="label">${influxTitle}</div>
         <div class="val">${data.upstream_discharge_cusec.toLocaleString()} <span style="font-size:14px;color:var(--ink-soft);">cusec</span></div>
-        <div class="subtext">Brahmaputra/Surma basin</div>
+        <div class="subtext">${influxSub}</div>
       </div>
       <div class="ai-metric-box">
-        <div class="label">48h Trend Projection</div>
+        <div class="label">${trendTitle}</div>
         <div class="val" style="font-size:14px;color:var(--accent);line-height:1.35;">${escapeHtml(data.trend_48h)}</div>
       </div>
     </div>
 
     <div style="margin-top:14px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:13px;display:flex;align-items:center;gap:10px;">
       <span style="font-size:18px;">💡</span>
-      <div><b>AI Recommended Action:</b> ${escapeHtml(data.recommended_action)}</div>
+      <div><b>${actionHeader}</b> ${escapeHtml(data.recommended_action)}</div>
     </div>
   `;
 }
@@ -840,9 +855,10 @@ function renderGeoUrgency(data) {
   const container = document.getElementById('aiDispatchListContainer');
   if (!container) return;
 
+  const isBn = ((typeof CUR_LANG !== 'undefined' ? CUR_LANG : 'bn') === 'bn');
   const queue = data.warehouse_dispatch_queue || [];
   if (queue.length === 0) {
-    container.innerHTML = '<div class="empty">কোনো জরুরি অগ্রাধিকার গুদাম তালিকা পাওয়া যায়নি।</div>';
+    container.innerHTML = `<div class="empty">${isBn ? 'কোনো জরুরি অগ্রাধিকার গুদাম তালিকা পাওয়া যায়নি।' : 'No priority warehouse dispatch queue available.'}</div>`;
     return;
   }
 
@@ -853,6 +869,12 @@ function renderGeoUrgency(data) {
     const chipsHtml = (item.recommended_stock || []).map(s => 
       `<span class="dispatch-stock-chip">📦 ${escapeHtml(s.item)}: <b>${s.qty} ${escapeHtml(s.unit || '')}</b></span>`
     ).join('');
+
+    const priorityText = isBn ? `অগ্রাধিকার: ${escapeHtml(item.priority_level)}` : `PRIORITY: ${escapeHtml(item.priority_level)}`;
+    const depotLabel = isBn ? 'নিকটবর্তী গুদাম:' : 'Nearest Depot:';
+    const transitLabel = isBn ? 'আনুমানিক সময়:' : 'Transit Est:';
+    const stockHeading = isBn ? 'সুপারিশকৃত জরুরি ত্রাণ সামগ্রী:' : 'Recommended Emergency Relief Stock:';
+    const dispatchBtnText = isBn ? '🚚 গুদাম থেকে ত্রাণ প্রেরণ নিশ্চিত করুন' : '🚚 Dispatch Warehouse Order';
 
     html += `
       <div class="dispatch-card" id="dispatch-card-${item.rank}">
@@ -865,25 +887,25 @@ function renderGeoUrgency(data) {
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <span class="tag ${tagClass}">PRIORITY: ${escapeHtml(item.priority_level)}</span>
+            <span class="tag ${tagClass}">${priorityText}</span>
             <span style="font-size:16px;font-weight:700;font-family:'Space Grotesk',sans-serif;color:${isCritical ? 'var(--alert)' : 'var(--accent)'};">
-              Index: ${item.urgency_index}
+              ${isBn ? 'সূচক:' : 'Index:'} ${item.urgency_index}
             </span>
           </div>
         </div>
 
         <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;">
-          📍 <b>Nearest Depot:</b> ${escapeHtml(item.nearest_warehouse)} · ⏱️ <b>Transit Est:</b> ${escapeHtml(item.transit_time_est)}
+          📍 <b>${depotLabel}</b> ${escapeHtml(item.nearest_warehouse)} · ⏱️ <b>${transitLabel}</b> ${escapeHtml(item.transit_time_est)}
         </div>
 
-        <div style="font-size:11.5px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Recommended Emergency Relief Stock:</div>
+        <div style="font-size:11.5px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.04em;">${stockHeading}</div>
         <div class="dispatch-stock-chips">
           ${chipsHtml}
         </div>
 
         <div style="display:flex;justify-content:flex-end;margin-top:10px;">
           <button type="button" class="btn btn-ghost" style="font-size:12px;padding:6px 14px;" onclick="simulateDispatchOrder(${item.rank}, '${escapeHtml(item.zone_name)}')">
-            🚚 Dispatch Warehouse Order
+            ${dispatchBtnText}
           </button>
         </div>
       </div>
@@ -895,6 +917,7 @@ function renderGeoUrgency(data) {
 
 function simulateDispatchOrder(rank, zoneName) {
   const card = document.getElementById(`dispatch-card-${rank}`);
+  const isBn = ((typeof CUR_LANG !== 'undefined' ? CUR_LANG : 'bn') === 'bn');
   if (card) {
     const btn = card.querySelector('button');
     if (btn) {
@@ -902,13 +925,15 @@ function simulateDispatchOrder(rank, zoneName) {
       btn.style.background = 'var(--safe-tint)';
       btn.style.color = 'var(--safe)';
       btn.style.borderColor = 'var(--safe)';
-      btn.innerHTML = '✔ Order Dispatched to Truck Fleet';
+      btn.innerHTML = isBn ? '✔ পরিবহন বহরে ডিসপ্যাচ আদেশ সম্পন্ন' : '✔ Order Dispatched to Truck Fleet';
     }
     const note = document.createElement('div');
     note.style.fontSize = '12px';
     note.style.color = 'var(--safe)';
     note.style.marginTop = '6px';
-    note.innerHTML = `✅ Automated requisition transmitted to nearest warehouse depot for <b>${escapeHtml(zoneName)}</b>. Drivers alerted via SMS.`;
+    note.innerHTML = isBn
+      ? `✅ <b>${escapeHtml(zoneName)}</b>-এর জন্য নিকটস্থ গুদামে স্বয়ংক্রিয় রিকুইজিশন প্রেরিত হয়েছে। চালক দল এসএমএস পেয়েছে।`
+      : `✅ Automated requisition transmitted to nearest warehouse depot for <b>${escapeHtml(zoneName)}</b>. Drivers alerted via SMS.`;
     card.appendChild(note);
   }
 }
@@ -920,13 +945,18 @@ function fetchLiveGps() {
   const latInput = document.getElementById('sosLat');
   const lonInput = document.getElementById('sosLon');
   const btn = document.getElementById('btnGetGps');
+  const isBn = ((typeof CUR_LANG !== 'undefined' ? CUR_LANG : 'bn') === 'bn');
 
   if (!navigator.geolocation) {
-    if (badge) badge.innerHTML = '<span style="color:var(--alert);">❌ আপনার ব্রাউজারে Geolocation সমর্থিত নয়। দয়া করে ম্যানুয়ালি অক্ষাংশ ও দ্রাঘিমাংশ লিখুন।</span>';
+    if (badge) badge.innerHTML = isBn
+      ? '<span style="color:var(--alert);">❌ আপনার ব্রাউজারে Geolocation সমর্থিত নয়। দয়া করে ম্যানুয়ালি লিখুন।</span>'
+      : '<span style="color:var(--alert);">❌ Geolocation not supported by your browser. Please enter manually.</span>';
     return;
   }
 
-  if (badge) badge.innerHTML = '<span class="spinner" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:6px;"></span>উপগ্রহ থেকে GPS অবস্থান খোঁজা হচ্ছে... / Acquiring GPS lock...';
+  if (badge) badge.innerHTML = isBn
+    ? '<span class="spinner" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:6px;"></span>উপগ্রহ থেকে GPS অবস্থান খোঁজা হচ্ছে...'
+    : '<span class="spinner" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:6px;"></span>Acquiring live GPS satellite fix...';
   if (btn) btn.disabled = true;
 
   navigator.geolocation.getCurrentPosition(
@@ -936,12 +966,16 @@ function fetchLiveGps() {
       const acc = position.coords.accuracy ? Math.round(position.coords.accuracy) : 15;
       if (latInput) latInput.value = lat;
       if (lonInput) lonInput.value = lon;
-      if (badge) badge.innerHTML = `<span style="color:var(--safe);font-weight:700;">✅ GPS সফলভাবে সনাক্ত হয়েছে! অক্ষাংশ: ${lat}, দ্রাঘিমাংশ: ${lon} (নির্ভুলতা: ±${acc}m)</span>`;
+      if (badge) badge.innerHTML = isBn
+        ? `<span style="color:var(--safe);font-weight:700;">✅ GPS সফলভাবে সনাক্ত হয়েছে! অক্ষাংশ: ${lat}, দ্রাঘিমাংশ: ${lon} (নির্ভুলতা: ±${acc}m)</span>`
+        : `<span style="color:var(--safe);font-weight:700;">✅ GPS Locked! Latitude: ${lat}, Longitude: ${lon} (Accuracy: ±${acc}m)</span>`;
       if (btn) btn.disabled = false;
     },
     (error) => {
       console.warn('Geolocation error:', error);
-      if (badge) badge.innerHTML = '<span style="color:var(--warn);">⚠️ লোকেশন অনুমতি পাওয়া যায়নি। ডিফল্ট হিসেবে কুড়িগ্রাম চিলমারীর স্থানাঙ্ক (25.8073, 89.6295) সেট করা হয়েছে। প্রয়োজন হলে ম্যানুয়ালি এডিট করুন।</span>';
+      if (badge) badge.innerHTML = isBn
+        ? '<span style="color:var(--warn);">⚠️ লোকেশন অনুমতি পাওয়া যায়নি। ডিফল্ট কোঅর্ডিনেট ব্যবহার করা হয়েছে।</span>'
+        : '<span style="color:var(--warn);">⚠️ Location permission denied. Using default coordinates.</span>';
       if (latInput && !latInput.value) latInput.value = '25.807300';
       if (lonInput && !lonInput.value) lonInput.value = '89.629500';
       if (btn) btn.disabled = false;
@@ -954,6 +988,7 @@ async function submitSosSignal() {
   const btn = document.getElementById('btnSubmitSos');
   const alertBox = document.getElementById('sosAlertBox');
   const resultBox = document.getElementById('sosClusterResult');
+  const isBn = ((typeof CUR_LANG !== 'undefined' ? CUR_LANG : 'bn') === 'bn');
 
   const name = document.getElementById('sosName')?.value.trim();
   const phone = document.getElementById('sosPhone')?.value.trim();
@@ -970,12 +1005,14 @@ async function submitSosSignal() {
   if (!name || !phone || !landmark) {
     if (alertBox) {
       alertBox.className = 'alert red show';
-      alertBox.textContent = 'অনুগ্রহ করে নাম, ফোন নম্বর এবং ল্যান্ডমার্ক বিবরণ পূরণ করুন।';
+      alertBox.textContent = isBn
+        ? 'অনুগ্রহ করে নাম, ফোন নম্বর এবং ল্যান্ডমার্ক বিবরণ পূরণ করুন।'
+        : 'Please fill in name, contact phone number, and landmark description.';
     }
     return;
   }
 
-  toggleBtnLoading(btn, true, 'জরুরি সংকেত পাঠানো হচ্ছে...');
+  toggleBtnLoading(btn, true, isBn ? 'জরুরি সংকেত পাঠানো হচ্ছে...' : 'Transmitting distress signal...');
   if (alertBox) alertBox.className = 'alert';
 
   try {
@@ -1003,20 +1040,22 @@ async function submitSosSignal() {
     renderSosSuccess({
       status: 'success',
       sos_id: `SOS-BD-${Math.floor(10000 + Math.random() * 90000)}`,
-      message: 'SOS সংকেত সফলভাবে গৃহীত এবং ক্লাস্টার নোডে অন্তর্ভুক্ত হয়েছে। উদ্ধারকারী দল পাঠানো হচ্ছে।',
+      message: isBn
+        ? 'SOS সংকেত সফলভাবে গৃহীত এবং ক্লাস্টার নোডে অন্তর্ভুক্ত হয়েছে। উদ্ধারকারী দল পাঠানো হচ্ছে।'
+        : 'SOS distress signal accepted and clustered into active rescue node. Units dispatched.',
       submitted_data: { name, phone, people_count: people, landmark, submitted_gps: `${lat}, ${lon}` },
       rescue_node: {
         cluster_id: 'RESCUE-NODE-KM-04',
-        cluster_name: `Rescue Node #4 — ${landmark.slice(0, 30)} Sector`,
+        cluster_name: isBn ? `রেসকিউ নোড #৪ — ${landmark.slice(0, 30)} সেক্টর` : `Rescue Node #4 — ${landmark.slice(0, 30)} Sector`,
         total_people_in_node: people + 18,
         active_sos_requests: 5,
         centroid_lat: lat + 0.00015,
         centroid_lon: lon + 0.00020,
         cluster_radius_meters: 42.5,
         clustering_algorithm: 'DBSCAN (eps=50m, metric=haversine)',
-        dispatch_priority: 'HIGH-PRIORITY (Cluster Level 1)',
-        assigned_rescue_team: 'বাংলাদেশ কোস্টগার্ড ও নৌবাহিনী স্পিডবোট দল (Coast Guard / Navy Unit)',
-        estimated_reach_time: '20-30 minutes',
+        dispatch_priority: isBn ? 'উচ্চ-অগ্রাধিকার (ক্লাস্টার লেভেল ১)' : 'HIGH-PRIORITY (Cluster Level 1)',
+        assigned_rescue_team: isBn ? 'বাংলাদেশ কোস্টগার্ড ও নৌবাহিনী স্পিডবোট দল' : 'Bangladesh Coast Guard & Navy Tactical Speedboat Fleet',
+        estimated_reach_time: isBn ? '২০-৩০ মিনিট' : '20-30 minutes',
         status: 'DISPATCH_IN_PROGRESS'
       }
     });
@@ -1032,6 +1071,7 @@ function renderSosSuccess(data) {
 
   if (form) form.style.display = 'none';
 
+  const isBn = ((typeof CUR_LANG !== 'undefined' ? CUR_LANG : 'bn') === 'bn');
   const node = data.rescue_node;
 
   resultBox.style.display = 'block';
@@ -1039,14 +1079,14 @@ function renderSosSuccess(data) {
   resultBox.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:1px solid rgba(52,211,153,0.3);padding-bottom:12px;margin-bottom:16px;">
       <div>
-        <span class="tag safe" style="font-size:12px;padding:4px 10px;">✔ SOS TRANSMITTED</span>
+        <span class="tag safe" style="font-size:12px;padding:4px 10px;">${isBn ? '✔ সংকেত গৃহীত' : '✔ SOS TRANSMITTED'}</span>
         <span style="font-size:13px;color:var(--ink-soft);margin-left:8px;">ID: <b>${escapeHtml(data.sos_id)}</b></span>
       </div>
       <span class="tag alert" style="font-size:12px;padding:4px 10px;">${escapeHtml(node.dispatch_priority)}</span>
     </div>
 
     <h3 style="color:var(--safe);margin:0 0 8px;">
-      📍 AI Spatial Rescue Cluster: ${escapeHtml(node.cluster_id)}
+      📍 ${isBn ? 'AI স্পেশাল রেসকিউ ক্লাস্টার নোড:' : 'AI Spatial Rescue Cluster:'} ${escapeHtml(node.cluster_id)}
     </h3>
     <div style="font-size:14px;color:var(--ink);margin-bottom:14px;">
       <b>${escapeHtml(node.cluster_name)}</b>
@@ -1054,39 +1094,43 @@ function renderSosSuccess(data) {
 
     <div class="ai-metric-grid" style="margin-bottom:16px;">
       <div class="ai-metric-box">
-        <div class="label">Total Trapped in Node</div>
-        <div class="val" style="color:var(--alert);">${node.total_people_in_node} <span style="font-size:14px;">people</span></div>
-        <div class="subtext">${node.active_sos_requests} nearby signals grouped</div>
+        <div class="label">${isBn ? 'ক্লাস্টারে মোট আটকে থাকা মানুষ' : 'Total Trapped in Node'}</div>
+        <div class="val" style="color:var(--alert);">${node.total_people_in_node} <span style="font-size:14px;">${isBn ? 'জন' : 'people'}</span></div>
+        <div class="subtext">${isBn ? `${node.active_sos_requests} টি সংকেত একসাথে গ্রুপ করা` : `${node.active_sos_requests} nearby signals grouped`}</div>
       </div>
       <div class="ai-metric-box">
-        <div class="label">Clustering Radius</div>
-        <div class="val">${node.cluster_radius_meters} <span style="font-size:14px;">meters</span></div>
+        <div class="label">${isBn ? 'ক্লাস্টারিং ব্যাসার্ধ' : 'Clustering Radius'}</div>
+        <div class="val">${node.cluster_radius_meters} <span style="font-size:14px;">${isBn ? 'মিটার' : 'meters'}</span></div>
         <div class="subtext">${escapeHtml(node.clustering_algorithm)}</div>
       </div>
       <div class="ai-metric-box">
-        <div class="label">Assigned Rescue Unit</div>
+        <div class="label">${isBn ? 'নিযুক্ত উদ্ধারকারী দল' : 'Assigned Rescue Unit'}</div>
         <div class="val" style="font-size:14px;color:var(--safe);line-height:1.35;">${escapeHtml(node.assigned_rescue_team)}</div>
-        <div class="subtext">Tactical Speedboat Fleet</div>
+        <div class="subtext">${isBn ? 'স্পিডবোট ও রেসকিউ টিম' : 'Tactical Speedboat Fleet'}</div>
       </div>
       <div class="ai-metric-box">
-        <div class="label">Estimated Arrival Time</div>
+        <div class="label">${isBn ? 'পৌঁছানোর সম্ভাব্য সময়' : 'Estimated Arrival Time'}</div>
         <div class="val" style="color:var(--accent);">${escapeHtml(node.estimated_reach_time)}</div>
-        <div class="subtext">Status: ${escapeHtml(node.status)}</div>
+        <div class="subtext">${isBn ? 'স্ট্যাটাস: প্রেরিত' : `Status: ${escapeHtml(node.status)}`}</div>
       </div>
     </div>
 
     <div style="padding:14px;background:rgba(0,0,0,0.25);border-radius:8px;font-size:13px;line-height:1.6;margin-bottom:16px;">
-      <p style="margin:0 0 8px;color:var(--ink);"><b>⚠️ জরুরি পরামর্শ / Emergency Instructions:</b></p>
-      • আপনার মোবাইল ফোনের চার্জ বাঁচানোর জন্য অপ্রয়োজনীয় অ্যাপ বন্ধ রাখুন।<br>
-      • রাতে বা দূর থেকে দেখার জন্য উজ্জ্বল রঙের কাপড়, টর্চ লাইট বা মোবাইলের ফ্ল্যাশলাইট প্রদর্শন করুন।<br>
-      • উদ্ধারকারী স্পিডবোট পৌঁছানো পর্যন্ত কোনো অবস্থাতেই বিপজ্জনক তীব্র স্রোতের মধ্যে একা সাঁতার কাটার চেষ্টা করবেন না।
+      <p style="margin:0 0 8px;color:var(--ink);"><b>⚠️ ${isBn ? 'জরুরি পরামর্শ' : 'Emergency Instructions'}:</b></p>
+      ${isBn 
+        ? '• আপনার মোবাইল ফোনের চার্জ বাঁচানোর জন্য অপ্রয়োজনীয় অ্যাপ বন্ধ রাখুন।<br>• রাতে বা দূর থেকে দেখার জন্য উজ্জ্বল রঙের কাপড়, টর্চ লাইট বা মোবাইলের ফ্ল্যাশলাইট প্রদর্শন করুন।<br>• উদ্ধারকারী স্পিডবোট পৌঁছানো পর্যন্ত কোনো অবস্থাতেই বিপজ্জনক তীব্র স্রোতের মধ্যে একা সাঁতার কাটার চেষ্টা করবেন না।'
+        : '• Conserve battery power by closing background smartphone applications.<br>• Wave brightly colored cloth or shine a flashlight/mobile torch for boat spotters.<br>• Do not attempt to swim alone across strong flood currents while waiting for rescue teams.'
+      }
     </div>
 
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <a href="tel:999" class="btn" style="background:var(--alert);text-decoration:none;font-weight:700;">📞 Call 999 Immediately</a>
-      <button type="button" class="btn btn-ghost" onclick="location.reload()">+ Submit Another Distress Signal</button>
+      <a href="tel:999" class="btn" style="background:var(--alert);text-decoration:none;font-weight:700;">📞 ${isBn ? '৯৯৯-এ জরুরি কল করুন' : 'Call 999 Immediately'}</a>
+      <button type="button" class="btn btn-ghost" onclick="location.reload()">+ ${isBn ? 'নতুন আরেকটি সংকেত পাঠান' : 'Submit Another Distress Signal'}</button>
     </div>
   `;
+
+  resultBox.scrollIntoView({ behavior: 'smooth' });
+}
 
   resultBox.scrollIntoView({ behavior: 'smooth' });
 }

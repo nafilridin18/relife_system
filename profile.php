@@ -30,7 +30,7 @@ require 'includes/header.php';
         <input type="file" id="ngoLogoInput" accept="image/png,image/jpeg,image/webp" hidden>
       </div>
       <div>
-        <h3 style="margin:0 0 4px;"><?= htmlspecialchars($ngo['ngo_name']) ?></h3>
+        <h3 style="margin:0 0 4px;"><?= htmlspecialchars(tEntity($ngo['ngo_name'])) ?></h3>
         <div class="note" style="margin:0;"><?= t('reg_no_label') ?>: <?= htmlspecialchars($ngo['reg_no']) ?></div>
       </div>
     </div>
@@ -38,7 +38,7 @@ require 'includes/header.php';
     <div id="profileAlert" class="alert"></div>
 
     <div class="grid2">
-      <div class="field"><label><?= t('ngo_name_label') ?></label><input type="text" value="<?= htmlspecialchars($ngo['ngo_name']) ?>" disabled></div>
+      <div class="field"><label><?= t('ngo_name_label') ?></label><input type="text" value="<?= htmlspecialchars(tEntity($ngo['ngo_name'])) ?>" disabled></div>
       <div class="field"><label><?= t('official_email_label') ?></label><input type="text" value="<?= htmlspecialchars($ngo['official_email']) ?>" disabled></div>
     </div>
     <div class="field">

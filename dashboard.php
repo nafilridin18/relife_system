@@ -2,12 +2,30 @@
 $pageTitle = 'Fairness Dashboard — Relief Distribution System';
 require 'config.php';
 require 'includes/auth.php';
-requireRole(['admin']);
+requireRole(['admin', 'ngo_operator']);
+$user = currentUser();
 
 $totalFamilies = $pdo->query("SELECT COUNT(*) c FROM family")->fetch()['c'];
-$totalDist     = $pdo->query("SELECT COUNT(*) c FROM distribution")->fetch()['c'];
-$totalBlocked  = $pdo->query("SELECT COUNT(*) c FROM duplicate_log")->fetch()['c'];
-$totalNgo      = $pdo->query("SELECT COUNT(*) c FROM ngo")->fetch()['c'];
+
+if ($user['role'] === 'admin') {
+    $totalDist     = $pdo->query("SELECT COUNT(*) c FROM distribution")->fetch()['c'];
+    $totalBlocked  = $pdo->query("SELECT COUNT(*) c FROM duplicate_log")->fetch()['c'];
+    $kpi4Count     = $pdo->query("SELECT COUNT(*) c FROM ngo")->fetch()['c'];
+    $kpi4Label     = t('kpi_ngo');
+} else {
+    $stmt = $pdo->prepare("SELECT COUNT(*) c FROM distribution WHERE ngo_id = ?");
+    $stmt->execute([$user['ngo_id']]);
+    $totalDist     = $stmt->fetch()['c'];
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) c FROM duplicate_log WHERE attempted_ngo_id = ?");
+    $stmt->execute([$user['ngo_id']]);
+    $totalBlocked  = $stmt->fetch()['c'];
+
+    $stmt = $pdo->prepare("SELECT COALESCE(SUM(quantity_available), 0) c FROM ngo_stock WHERE ngo_id = ?");
+    $stmt->execute([$user['ngo_id']]);
+    $kpi4Count     = (int)$stmt->fetch()['c'];
+    $kpi4Label     = t('kpi_my_stock');
+}
 
 $fairness = $pdo->query("SELECT * FROM v_area_fairness")->fetchAll();
 
@@ -65,7 +83,7 @@ require 'includes/header.php';
   <div class="kpi"><div class="n" data-count="<?= $totalFamilies ?>">0</div><div class="l"><?= t('kpi_families') ?></div></div>
   <div class="kpi"><div class="n" data-count="<?= $totalDist ?>">0</div><div class="l"><?= t('kpi_distributions') ?></div></div>
   <div class="kpi"><div class="n" data-count="<?= $totalBlocked ?>">0</div><div class="l"><?= t('kpi_blocked') ?></div></div>
-  <div class="kpi"><div class="n" data-count="<?= $totalNgo ?>">0</div><div class="l"><?= t('kpi_ngo') ?></div></div>
+  <div class="kpi"><div class="n" data-count="<?= $kpi4Count ?>">0</div><div class="l"><?= $kpi4Label ?></div></div>
 </div>
 
 <div class="card">

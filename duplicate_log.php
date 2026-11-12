@@ -26,7 +26,7 @@ require 'includes/header.php';
 ?>
 
 <div class="card">
-  <h2 class="icon-alert"><?= icon('ban') ?>Duplicate Attempt Log</h2>
+  <h2 class="icon-alert"><?= icon('ban') ?><?= t('dup_log_h2') ?></h2>
   <p class="sub"><?= t('dup_log_sub') ?></p>
 
   <?php if (!$logs): ?>
@@ -34,13 +34,13 @@ require 'includes/header.php';
   <?php else: ?>
     <div class="table-scroll">
     <table>
-      <thead><tr><th>NID Hash</th><th><?= t('th_attempted_ngo') ?></th><th><?= t('th_reason') ?></th><th><?= t('th_date') ?></th></tr></thead>
+      <thead><tr><th><?= t('nid_hash_preview') ?></th><th><?= t('th_attempted_ngo') ?></th><th><?= t('th_reason') ?></th><th><?= t('th_date') ?></th></tr></thead>
       <tbody>
       <?php foreach ($logs as $l): ?>
         <tr>
           <td><span class="hash-chip"><?= substr($l['nid_hash'],0,14) ?>…</span></td>
-          <td><?= htmlspecialchars($l['ngo_name'] ?? '—') ?></td>
-          <td><?= htmlspecialchars($l['reason']) ?></td>
+          <td><?= htmlspecialchars(tEntity($l['ngo_name'] ?? '—')) ?></td>
+          <td><?= htmlspecialchars(tEntity($l['reason'])) ?></td>
           <td class="num"><?= (new DateTime($l['attempted_at']))->format('d M Y, h:i A') ?></td>
         </tr>
       <?php endforeach; ?>
@@ -63,14 +63,14 @@ require 'includes/header.php';
       <tbody>
       <?php foreach ($queries as $q): ?>
         <tr>
-          <td><?= htmlspecialchars($q['ngo_name'] ?? '—') ?></td>
+          <td><?= htmlspecialchars(tEntity($q['ngo_name'] ?? '—')) ?></td>
           <td>
             <?php if (!$q['head_name']): ?>
               <span style="color:var(--ink-soft);">—</span>
             <?php elseif ($q['member_name']): ?>
-              <?= htmlspecialchars($q['head_name']) ?> <span class="tag shelter"><?= t('audit_via_member') ?>: <?= htmlspecialchars($q['member_name']) ?></span>
+              <?= htmlspecialchars(tEntity($q['head_name'])) ?> <span class="tag shelter"><?= t('audit_via_member') ?>: <?= htmlspecialchars(tEntity($q['member_name'])) ?></span>
             <?php else: ?>
-              <?= htmlspecialchars($q['head_name']) ?> <span class="tag food"><?= t('audit_via_head') ?></span>
+              <?= htmlspecialchars(tEntity($q['head_name'])) ?> <span class="tag food"><?= t('audit_via_head') ?></span>
             <?php endif; ?>
           </td>
           <td class="num"><?= (new DateTime($q['query_time']))->format('d M Y, h:i A') ?></td>

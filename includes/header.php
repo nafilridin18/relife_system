@@ -51,18 +51,21 @@ const CSRF_TOKEN = <?= json_encode(csrfToken()) ?>;
       — <?= htmlspecialchars($user['username']) ?>
     </span>
     <a href="logout.php"><?= t('logout') ?></a>
+    <?php else: ?>
+    <a href="index.php" class="btn" style="font-size:11.5px;padding:5px 12px;background:var(--primary);color:#fff;text-decoration:none;"><?= $lang==='bn'?'লগইন':'Login' ?></a>
+    <a href="register_ngo.php" class="btn btn-ghost" style="font-size:11.5px;padding:5px 12px;text-decoration:none;"><?= $lang==='bn'?'নিবন্ধন':'Register' ?></a>
     <?php endif; ?>
   </div>
 </div>
 
 <?php if ($user): ?>
 <div class="tabs">
+  <a class="tab-btn <?= $currentPage==='dashboard.php'?'active':'' ?>" href="dashboard.php"><?= icon('scale',16) ?><span><?= t('tab_dashboard') ?></span></a>
   <a class="tab-btn <?= $currentPage==='distribute.php'?'active':'' ?>" href="distribute.php"><?= icon('package',16) ?><span><?= t('tab_distribute') ?></span></a>
   <a class="tab-btn <?= $currentPage==='register_family.php'?'active':'' ?>" href="register_family.php"><?= icon('users',16) ?><span><?= t('tab_register_family') ?></span></a>
   <a class="tab-btn <?= $currentPage==='stock.php'?'active':'' ?>" href="stock.php"><?= icon('box',16) ?><span><?= t('tab_stock') ?></span></a>
   <a class="tab-btn <?= $currentPage==='profile.php'?'active':'' ?>" href="profile.php"><?= icon('user',16) ?><span><?= t('tab_profile') ?></span></a>
   <?php if ($user['role']==='admin'): ?>
-  <a class="tab-btn <?= $currentPage==='dashboard.php'?'active':'' ?>" href="dashboard.php"><?= icon('scale',16) ?><span><?= t('tab_dashboard') ?></span></a>
   <a class="tab-btn <?= $currentPage==='family_list.php'?'active':'' ?>" href="family_list.php"><?= icon('users',16) ?><span><?= t('tab_family_list') ?></span></a>
   <a class="tab-btn <?= $currentPage==='duplicate_log.php'?'active':'' ?>" href="duplicate_log.php"><?= icon('ban',16) ?><span><?= t('tab_duplicate_log') ?></span></a>
   <?php endif; ?>
