@@ -103,23 +103,51 @@ A modern, production-ready disaster relief management system combining a robust 
 
 ---
 
-## 2. Authentication & Credentials
+## 2. User Roles, Access Control & Responsibility Matrix (RBAC)
 
-### Staff & Administrative Accounts
+ReliefX implements strict **Role-Based Access Control (RBAC)** across three distinct participant tiers:
 
-| Username | Password | Role | Access Level |
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   RELIEFX SYSTEM USERS                                 │
+├───────────────────────────────┬───────────────────────────────┬────────────────────────┤
+│    District Relief Officer    │       NGO Field Operator      │    Affected Citizen    │
+│            (Admin)            │         (ngo_operator)        │     (General Public)   │
+├───────────────────────────────┼───────────────────────────────┼────────────────────────┤
+│ • District-wide Governance    │ • Field Beneficiary Enrollment│ • Zero-login SOS Portal│
+│ • Full Audit & Duplication Log│ • Relief Verification & Entry │ • GPS Emergency Signal │
+│ • Multi-NGO Inventory Control │ • Own NGO Stock Restocking    │ • AI Helpline Chatbot  │
+│ • Strategic AI Disaster Triage│ • Tailored Operational Dash   │ • Identity Protection  │
+└───────────────────────────────┴───────────────────────────────┴────────────────────────┘
+```
+
+### 2.1 Role Capabilities & Access Matrix
+
+| Feature / Page | Route | Admin (`admin`) | NGO Operator (`ngo_operator`) | Citizen (Public) |
+|---|---|:---:|:---:|:---:|
+| **Fairness & Operational Dashboard** | `/dashboard.php` | ✅ Full District Overview (All NGOs) | ✅ Tailored (Own NGO Metrics & Stock) | ❌ Restricted |
+| **Relief Distribution Entry** | `/distribute.php` | ✅ Can select ANY NGO | 🔒 Locked to OWN NGO | ❌ Restricted |
+| **Beneficiary Family Registration** | `/register_family.php` | ✅ Enrolls & views summary table | ✅ Enrolls families in field | ❌ Restricted |
+| **All Families Registry** | `/family_list.php` | ✅ Full Database Access | ❌ Restricted | ❌ Restricted |
+| **Duplicate & Lookup Audit Trail** | `/duplicate_log.php` | ✅ Full Security Audit Log | ❌ Restricted | ❌ Restricted |
+| **NGO Warehouse Inventory** | `/stock.php` | ✅ Multi-NGO stock inspection & add | 🔒 Own NGO stock inspection & add | ❌ Restricted |
+| **NGO Organization Profile** | `/profile.php` | ✅ System Admin view | ✅ Upload custom logo & contact phone | ❌ Restricted |
+| **Public NGO Registration & OTP** | `/register_ngo.php` | N/A | ✅ Self-registration + 6-digit OTP | ✅ Open for NGOs |
+| **Emergency SOS Rescue Portal** | `/sos_portal.php` | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
+| **AI Helpline Chatbot Assistant** | Floating widget on all pages | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
+
+---
+
+### 2.2 Seed Credentials & Demo Accounts
+
+| Username | Password | Role | Description |
 |---|---|---|---|
-| `admin` | `Admin@123` | District Relief Officer | Full admin access (Fairness Dashboard, Audit Log, All Families, AI Geo-Urgency) |
-| `asha_operator` | `Ngo@123` | Asha Foundation | Relief entry, inventory tracking & family registration |
-| `relief_operator` | `Ngo@123` | Relief Bangladesh | Relief entry, inventory tracking & family registration |
-| `sfv_operator` | `Ngo@123` | Save the Flood Victims | Relief entry, inventory tracking & family registration |
+| `admin` | `Admin@123` | District Relief Officer | System administrator with full district oversight, fairness governance, and audit trails. |
+| `asha_operator` | `Ngo@123` | Asha Foundation | Field operator for Asha Foundation (relief distributions, stock management, family enrollment). |
+| `relief_operator` | `Ngo@123` | Relief Bangladesh | Field operator for Relief Bangladesh. |
+| `sfv_operator` | `Ngo@123` | Save the Flood Victims | Field operator for Save the Flood Victims. |
 
-### Public Citizen Portals (No Authentication Required)
-
-| Page | Route | Description |
-|---|---|---|
-| **Citizen SOS Portal** | `/sos_portal.php` | Emergency distress signal submission with browser GPS auto-detection and live clustering response. |
-| **AI Helpline Chatbot** | Globally on every page | Floating interactive assistant in the bottom-right corner for bilingual flood queries and rescue ticket dispatch. |
+> **Self-Registration for New NGOs:** Any authorized organization can register via `/register_ngo.php`. Upon submitting official details, a 6-digit verification code is generated/emailed and validated on `/verify_email.php` before granting `ngo_operator` privileges.
 
 ## 3. Complete File Structure
 
