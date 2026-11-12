@@ -205,3 +205,4 @@ function initChatWidget() {
       .replace(/'/g, '&#039;');
   }
 }
+

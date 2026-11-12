@@ -31,3 +31,4 @@ if __name__ == "__main__":
     print(f"📚 Interactive Swagger API Docs at: http://127.0.0.1:{target_port}/docs")
 
     uvicorn.run("main:app", host="0.0.0.0", port=target_port, reload=True, app_dir=os.path.dirname(__file__))
+

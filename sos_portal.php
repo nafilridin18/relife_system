@@ -162,3 +162,4 @@ $lang = currentLang();
 </div><!-- /.wrap -->
 
 <?php require 'includes/footer.php'; ?>
+
