@@ -51,28 +51,42 @@ const CSRF_TOKEN = <?= json_encode(csrfToken()) ?>;
     </a>
     <?php if ($user): ?>
     <span class="role-badge">
-      <?= $user['role']==='admin' ? 'Admin' : htmlspecialchars(tEntity($user['ngo_name'] ?? 'NGO Operator')) ?>
-      — <?= htmlspecialchars($user['username']) ?>
+      <?php if ($user['role'] === 'admin'): ?>
+        Admin — <?= htmlspecialchars($user['username']) ?>
+      <?php elseif ($user['role'] === 'citizen'): ?>
+        👤 <?= $lang === 'bn' ? 'নাগরিক' : 'Citizen' ?> — <?= htmlspecialchars($user['head_name'] ?? $user['username']) ?>
+      <?php else: ?>
+        <?= htmlspecialchars(tEntity($user['ngo_name'] ?? 'NGO Operator')) ?> — <?= htmlspecialchars($user['username']) ?>
+      <?php endif; ?>
     </span>
     <a href="logout.php"><?= t('logout') ?></a>
     <?php else: ?>
+    <a href="guest_dashboard.php" class="btn btn-ghost" style="font-size:11.5px;padding:5px 11px;text-decoration:none;">
+      <?= $lang==='bn'?'পাবলিক ট্র্যাকিং':'Public Log' ?>
+    </a>
     <a href="index.php" class="btn" style="font-size:11.5px;padding:5px 12px;background:var(--primary);color:#fff;text-decoration:none;"><?= $lang==='bn'?'লগইন':'Login' ?></a>
-    <a href="register_ngo.php" class="btn btn-ghost" style="font-size:11.5px;padding:5px 12px;text-decoration:none;"><?= $lang==='bn'?'নিবন্ধন':'Register' ?></a>
+    <a href="register_user.php" class="btn btn-ghost" style="font-size:11.5px;padding:5px 12px;text-decoration:none;"><?= $lang==='bn'?'নাগরিক নিবন্ধন':'Citizen Sign Up' ?></a>
     <?php endif; ?>
   </div>
 </div>
 
 <?php if ($user): ?>
 <div class="tabs">
-  <a class="tab-btn <?= $currentPage==='dashboard.php'?'active':'' ?>" href="dashboard.php"><?= icon('scale',16) ?><span><?= t('tab_dashboard') ?></span></a>
-  <a class="tab-btn <?= $currentPage==='weather_alerts.php'?'active':'' ?>" href="weather_alerts.php"><?= icon('cloud-rain',16) ?><span><?= t('tab_weather_alerts') ?></span></a>
-  <a class="tab-btn <?= $currentPage==='distribute.php'?'active':'' ?>" href="distribute.php"><?= icon('package',16) ?><span><?= t('tab_distribute') ?></span></a>
-  <a class="tab-btn <?= $currentPage==='register_family.php'?'active':'' ?>" href="register_family.php"><?= icon('users',16) ?><span><?= t('tab_register_family') ?></span></a>
-  <a class="tab-btn <?= $currentPage==='stock.php'?'active':'' ?>" href="stock.php"><?= icon('box',16) ?><span><?= t('tab_stock') ?></span></a>
-  <a class="tab-btn <?= $currentPage==='profile.php'?'active':'' ?>" href="profile.php"><?= icon('user',16) ?><span><?= t('tab_profile') ?></span></a>
-  <?php if ($user['role']==='admin'): ?>
-  <a class="tab-btn <?= $currentPage==='family_list.php'?'active':'' ?>" href="family_list.php"><?= icon('users',16) ?><span><?= t('tab_family_list') ?></span></a>
-  <a class="tab-btn <?= $currentPage==='duplicate_log.php'?'active':'' ?>" href="duplicate_log.php"><?= icon('ban',16) ?><span><?= t('tab_duplicate_log') ?></span></a>
+  <?php if ($user['role'] === 'citizen'): ?>
+    <a class="tab-btn <?= $currentPage==='citizen_dashboard.php'?'active':'' ?>" href="citizen_dashboard.php"><?= icon('package',16) ?><span><?= t('tab_citizen_dashboard') ?></span></a>
+    <a class="tab-btn <?= $currentPage==='weather_alerts.php'?'active':'' ?>" href="weather_alerts.php"><?= icon('cloud-rain',16) ?><span><?= t('tab_weather_alerts') ?></span></a>
+    <a class="tab-btn <?= $currentPage==='sos_portal.php'?'active':'' ?>" href="sos_portal.php"><?= icon('shield-check',16) ?><span>SOS Portal</span></a>
+  <?php else: ?>
+    <a class="tab-btn <?= $currentPage==='dashboard.php'?'active':'' ?>" href="dashboard.php"><?= icon('scale',16) ?><span><?= t('tab_dashboard') ?></span></a>
+    <a class="tab-btn <?= $currentPage==='weather_alerts.php'?'active':'' ?>" href="weather_alerts.php"><?= icon('cloud-rain',16) ?><span><?= t('tab_weather_alerts') ?></span></a>
+    <a class="tab-btn <?= $currentPage==='distribute.php'?'active':'' ?>" href="distribute.php"><?= icon('package',16) ?><span><?= t('tab_distribute') ?></span></a>
+    <a class="tab-btn <?= $currentPage==='register_family.php'?'active':'' ?>" href="register_family.php"><?= icon('users',16) ?><span><?= t('tab_register_family') ?></span></a>
+    <a class="tab-btn <?= $currentPage==='stock.php'?'active':'' ?>" href="stock.php"><?= icon('box',16) ?><span><?= t('tab_stock') ?></span></a>
+    <a class="tab-btn <?= $currentPage==='profile.php'?'active':'' ?>" href="profile.php"><?= icon('user',16) ?><span><?= t('tab_profile') ?></span></a>
+    <?php if ($user['role']==='admin'): ?>
+    <a class="tab-btn <?= $currentPage==='family_list.php'?'active':'' ?>" href="family_list.php"><?= icon('users',16) ?><span><?= t('tab_family_list') ?></span></a>
+    <a class="tab-btn <?= $currentPage==='duplicate_log.php'?'active':'' ?>" href="duplicate_log.php"><?= icon('ban',16) ?><span><?= t('tab_duplicate_log') ?></span></a>
+    <?php endif; ?>
   <?php endif; ?>
 </div>
 <?php endif; ?>

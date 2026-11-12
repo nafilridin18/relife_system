@@ -123,15 +123,33 @@ CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin','ngo_operator') NOT NULL,
+    role ENUM('admin','ngo_operator','citizen') NOT NULL,
     ngo_id INT NULL,
+    phone VARCHAR(15) NULL,
+    nid_hash CHAR(64) NULL,
+    family_id INT NULL,
     email VARCHAR(150) UNIQUE,
     is_verified TINYINT(1) NOT NULL DEFAULT 0,
     verify_token VARCHAR(64) NULL,
     verify_expires DATETIME NULL,
     reset_token VARCHAR(64) NULL,
     reset_expires DATETIME NULL,
-    FOREIGN KEY (ngo_id) REFERENCES ngo(ngo_id)
+    FOREIGN KEY (ngo_id) REFERENCES ngo(ngo_id),
+    FOREIGN KEY (family_id) REFERENCES family(family_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE emergency_relief_request (
+    request_id INT AUTO_INCREMENT PRIMARY KEY,
+    family_id INT NULL,
+    nid_hash CHAR(64) NOT NULL,
+    applicant_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+    requested_category VARCHAR(100) NOT NULL,
+    urgency_reason TEXT NOT NULL,
+    days_since_last_relief INT DEFAULT 0,
+    status ENUM('PENDING','APPROVED','REJECTED','DISPATCHED') NOT NULL DEFAULT 'PENDING',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (family_id) REFERENCES family(family_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE query_log (

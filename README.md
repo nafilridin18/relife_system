@@ -21,10 +21,11 @@ A modern, production-ready disaster relief management system combining a robust 
 
 **ReliefX** solves both problems through multi-layered database guarantees (triggers, stored procedures, constraints) coupled with real-time geospatial intelligence.
 
-**Stakeholders / System Users:**
-- **District Relief Officer (Admin):** Oversees fairness metrics across upazilas, monitors live flood risk alerts, and manages NGO distribution queues.
+**Stakeholders / System Personas:**
+- **District Relief Officer (`admin`):** Oversees fairness metrics across upazilas, monitors live flood risk alerts, and manages NGO distribution queues.
 - **NGO Field Operator (`ngo_operator`):** Verifies beneficiary eligibility, records distributions, and manages physical warehouse inventories.
-- **Affected Citizens / Beneficiaries:** Transmit emergency SOS signals via the public portal or chat with the AI Helpline assistant in Bengali or English.
+- **Citizen / Beneficiary (`citizen`):** Enrolled via NID and mobile phone. Views relief history, tracks 7-day category cooldown eligibility, applies for special emergency relief after 5 days, and accesses SOS alerts.
+- **Guest / Public Citizen (`guest`):** 1-click access without login. Views public relief distribution transparency by area (last distribution date, providing NGOs, and estimated next cycle), checks live river flood gauges, and chats with the AI Helpline.
 
 **USP (Unique Selling Points):**
 1. **Zero Plaintext NID Storage:** NIDs are irreversibly hashed using salted SHA-256 (`nid_hash`) before persisting to disk.
@@ -166,10 +167,13 @@ relief_system/
 ├── er_diagram.png                        ← high-resolution Entity-Relationship diagram
 ├── config.php                            ← DB PDO connection, hashNID(), mb_levenshtein(), env loader
 ├── install.php                           ← one-time account setup script (seeds admin & operators)
-├── index.php                             ← landing page and login portal
+├── index.php                             ← landing page with multi-role persona switcher (Admin, NGO, Citizen, Guest)
 ├── logout.php                            ← terminates session and redirects to login
 ├── distribute.php                        ← core relief distribution workflow & live duplicate check
 ├── register_family.php                   ← beneficiary registration with fuzzy match & cross-check
+├── register_user.php                     ← citizen self-registration with NID and mobile phone
+├── citizen_dashboard.php                 ← citizen portal: relief history, category cooldown & 5-day emergency request
+├── guest_dashboard.php                   ← public transparency portal: area-wise distribution log & next cycle tracking
 ├── family_list.php                       ← admin-only: complete registry of all enrolled families
 ├── dashboard.php                         ← admin-only: fairness gauge, NGO performance & live map
 ├── duplicate_log.php                     ← admin-only: audit log of blocked duplicates & lookup trail

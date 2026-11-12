@@ -1,17 +1,18 @@
 <?php
 // Public-facing Live Weather Condition & Flood Early Warning Alert Portal
 // Accessible to Everyone: Citizens, Beneficiaries, NGO Field Staff, and Admin
+header('Content-Type: text/html; charset=utf-8');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('X-Content-Type-Options: nosniff');
 $pageTitle = 'Weather & Flood Early Warning Alerts — ReliefX';
 require 'config.php';
 require 'includes/auth.php';
+require_once __DIR__ . '/includes/weather_data.php';
 $lang = currentLang();
 
 // Load stations list
-ob_start();
-require __DIR__ . '/api/get_weather_alerts.php';
-$rawJson = ob_get_clean();
-$alertData = json_decode($rawJson, true);
-$stations = $alertData['stations'] ?? [];
+$stations = getFloodMonitoringStations();
 
 $defaultKey = 'kurigram';
 $currentStation = $stations[$defaultKey] ?? reset($stations);
@@ -66,15 +67,21 @@ $isUserLoggedIn = !empty($_SESSION['user']);
   $currentPage = 'weather_alerts.php';
 ?>
 <div class="tabs">
-  <a class="tab-btn" href="dashboard.php"><?= icon('scale',16) ?><span><?= t('tab_dashboard') ?></span></a>
-  <a class="tab-btn active" href="weather_alerts.php"><?= icon('cloud-rain',16) ?><span><?= t('tab_weather_alerts') ?></span></a>
-  <a class="tab-btn" href="distribute.php"><?= icon('package',16) ?><span><?= t('tab_distribute') ?></span></a>
-  <a class="tab-btn" href="register_family.php"><?= icon('users',16) ?><span><?= t('tab_register_family') ?></span></a>
-  <a class="tab-btn" href="stock.php"><?= icon('box',16) ?><span><?= t('tab_stock') ?></span></a>
-  <a class="tab-btn" href="profile.php"><?= icon('user',16) ?><span><?= t('tab_profile') ?></span></a>
-  <?php if ($user['role']==='admin'): ?>
-  <a class="tab-btn" href="family_list.php"><?= icon('users',16) ?><span><?= t('tab_family_list') ?></span></a>
-  <a class="tab-btn" href="duplicate_log.php"><?= icon('ban',16) ?><span><?= t('tab_duplicate_log') ?></span></a>
+  <?php if ($user['role'] === 'citizen'): ?>
+    <a class="tab-btn" href="citizen_dashboard.php"><?= icon('package',16) ?><span><?= t('tab_citizen_dashboard') ?></span></a>
+    <a class="tab-btn active" href="weather_alerts.php"><?= icon('cloud-rain',16) ?><span><?= t('tab_weather_alerts') ?></span></a>
+    <a class="tab-btn" href="sos_portal.php"><?= icon('shield-check',16) ?><span>SOS Portal</span></a>
+  <?php else: ?>
+    <a class="tab-btn" href="dashboard.php"><?= icon('scale',16) ?><span><?= t('tab_dashboard') ?></span></a>
+    <a class="tab-btn active" href="weather_alerts.php"><?= icon('cloud-rain',16) ?><span><?= t('tab_weather_alerts') ?></span></a>
+    <a class="tab-btn" href="distribute.php"><?= icon('package',16) ?><span><?= t('tab_distribute') ?></span></a>
+    <a class="tab-btn" href="register_family.php"><?= icon('users',16) ?><span><?= t('tab_register_family') ?></span></a>
+    <a class="tab-btn" href="stock.php"><?= icon('box',16) ?><span><?= t('tab_stock') ?></span></a>
+    <a class="tab-btn" href="profile.php"><?= icon('user',16) ?><span><?= t('tab_profile') ?></span></a>
+    <?php if ($user['role']==='admin'): ?>
+    <a class="tab-btn" href="family_list.php"><?= icon('users',16) ?><span><?= t('tab_family_list') ?></span></a>
+    <a class="tab-btn" href="duplicate_log.php"><?= icon('ban',16) ?><span><?= t('tab_duplicate_log') ?></span></a>
+    <?php endif; ?>
   <?php endif; ?>
 </div>
 <?php endif; ?>

@@ -3,17 +3,36 @@ require 'config.php';
 require 'includes/auth.php';
 
 if (isset($_SESSION['user'])) {
-    header('Location: distribute.php');
+    if ($_SESSION['user']['role'] === 'admin') {
+        header('Location: dashboard.php');
+    } elseif ($_SESSION['user']['role'] === 'citizen') {
+        header('Location: citizen_dashboard.php');
+    } else {
+        header('Location: distribute.php');
+    }
     exit;
 }
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $identifier = trim($_POST['username'] ?? '');
+    $password   = $_POST['password'] ?? '';
 
-    $stmt = $pdo->prepare("SELECT u.*, n.ngo_name FROM users u LEFT JOIN ngo n ON u.ngo_id = n.ngo_id WHERE username = ?");
-    $stmt->execute([$username]);
+    $nidHash = hashNID($identifier);
+
+    $stmt = $pdo->prepare("
+        SELECT u.*, n.ngo_name, f.head_name, upz.upazila_name, dist.district_name
+        FROM users u 
+        LEFT JOIN ngo n ON u.ngo_id = n.ngo_id 
+        LEFT JOIN family f ON u.family_id = f.family_id
+        LEFT JOIN upazila upz ON f.upazila_id = upz.upazila_id
+        LEFT JOIN district dist ON upz.district_id = dist.district_id
+        WHERE u.username = ? 
+           OR u.email = ? 
+           OR u.phone = ? 
+           OR u.nid_hash = ?
+    ");
+    $stmt->execute([$identifier, $identifier, $identifier, $nidHash]);
     $row = $stmt->fetch();
 
     if ($row && password_verify($password, $row['password_hash'])) {
@@ -21,13 +40,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = t('err_not_verified');
         } else {
             $_SESSION['user'] = [
-                'user_id'  => $row['user_id'],
-                'username' => $row['username'],
-                'role'     => $row['role'],
-                'ngo_id'   => $row['ngo_id'],
-                'ngo_name' => $row['ngo_name'],
+                'user_id'   => $row['user_id'],
+                'username'  => $row['username'],
+                'role'      => $row['role'],
+                'ngo_id'    => $row['ngo_id'],
+                'ngo_name'  => $row['ngo_name'],
+                'family_id' => $row['family_id'],
+                'nid_hash'  => $row['nid_hash'],
+                'phone'     => $row['phone'],
+                'head_name' => $row['head_name'] ?? $row['username']
             ];
-            header('Location: distribute.php');
+            if ($row['role'] === 'admin') {
+                header('Location: dashboard.php');
+            } elseif ($row['role'] === 'citizen') {
+                header('Location: citizen_dashboard.php');
+            } else {
+                header('Location: distribute.php');
+            }
             exit;
         }
     } else {
@@ -36,6 +65,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $lang = currentLang();
 $brandNgo = $pdo->query("SELECT COUNT(*) c FROM ngo")->fetch()['c'];
+$brandFamilies = $pdo->query("SELECT COUNT(*) c FROM family")->fetch()['c'];
+$brandDist = $pdo->query("SELECT COUNT(*) c FROM distribution")->fetch()['c'];
+$brandZones = 8;
 ?>
 <!DOCTYPE html>
 <html lang="<?= $lang ?>">
@@ -71,44 +103,208 @@ $brandNgo = $pdo->query("SELECT COUNT(*) c FROM ngo")->fetch()['c'];
 
     <div class="auth-form-inner">
       <img src="img/logo-icon.png" alt="ReliefX" class="login-logo mobile-only-logo">
-      <h1><?= t('login_title') ?></h1>
-      <p class="sub"><?= t('login_sub') ?></p>
+      <h1 id="portalHeading"><?= t('login_title') ?></h1>
+      <p class="sub" id="portalSub"><?= t('login_sub') ?></p>
+
+      <!-- Multi-Role Persona Switcher -->
+      <div class="login-role-tabs" id="roleTabs">
+        <button type="button" class="login-role-tab active" data-role="admin" id="tabBtnAdmin">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span><?= t('role_admin') ?></span>
+        </button>
+        <button type="button" class="login-role-tab" data-role="ngo" id="tabBtnNgo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 9h6M15 15h6M3 9h6M3 15h6"/></svg>
+          <span><?= t('role_ngo') ?></span>
+        </button>
+        <button type="button" class="login-role-tab" data-role="citizen" id="tabBtnCitizen">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span><?= t('role_citizen') ?></span>
+        </button>
+        <button type="button" class="login-role-tab" data-role="guest" id="tabBtnGuest">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span><?= t('role_guest') ?></span>
+        </button>
+      </div>
+
+      <div class="login-role-desc" id="roleDesc">
+        <?= t('login_tab_admin_desc') ?>
+      </div>
 
       <?php if ($error): ?>
         <div class="alert red show"><?= htmlspecialchars($error) ?></div>
       <?php endif; ?>
 
-      <form method="POST">
+      <!-- Standard Form for Admin, NGO, Citizen -->
+      <form method="POST" id="authLoginForm">
         <div class="field">
-          <label><?= t('username') ?></label>
+          <label id="usernameLabel"><?= t('username') ?></label>
           <div class="input-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <input type="text" name="username" required autofocus>
+            <svg id="userInputIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" name="username" id="usernameInput" required autofocus placeholder="admin">
           </div>
         </div>
         <div class="field">
           <label><?= t('password') ?></label>
           <div class="input-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input type="password" name="password" required>
+            <input type="password" name="password" id="passwordInput" required placeholder="••••••••">
           </div>
           <p style="text-align:right; margin-top:6px;">
             <a href="forgot_password.php" style="font-size:12.5px;"><?= t('forgot_pw_link') ?></a>
           </p>
         </div>
-        <button class="btn" type="submit"><?= t('login_btn') ?></button>
+        <button class="btn" type="submit" id="loginSubmitBtn"><?= t('btn_login_admin') ?></button>
       </form>
 
-      <p style="text-align:center; margin-top:18px; font-size:13.5px;">
-        <?= t('new_foundation') ?> <a href="register_ngo.php"><?= t('register_with_email') ?></a>
-      </p>
-
-      <div class="demo-creds">
-        <b><?= t('admin_account') ?></b>:<br>
-        admin / Admin@123 (District Relief Officer)
+      <!-- Guest Portal Panel (Visible when Guest tab selected) -->
+      <div class="guest-panel" id="guestPanel" style="display:none;">
+        <div style="font-size:38px; margin-bottom:10px;">🌐</div>
+        <h3><?= $lang==='bn' ? 'উন্মুক্ত পাবলিক ত্রাণ ট্র্যাকিং' : 'Open Public Tracking' ?></h3>
+        <p><?= $lang==='bn' ? 'কোনো পাসওয়ার্ড বা রেজিস্ট্রেশন ছাড়াই বন্যাদুর্গত এলাকার ত্রাণ বিতরণ পরিস্থিতি, লাইভ আবহাওয়া সতর্কতা এবং জরুরি এসওএস পোর্টাল দেখুন।' : 'Access live relief distribution status across flood zones, real-time hydrological weather alerts, and emergency SOS without an account.' ?></p>
+        <a href="guest_dashboard.php" class="btn" style="display:block; text-decoration:none; margin-bottom:12px;">
+          <?= t('btn_continue_guest') ?>
+        </a>
+        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:14px;">
+          <a href="sos_portal.php" class="btn" style="font-size:11.5px;padding:6px 12px;background:rgba(255,107,107,0.18);color:var(--alert);border:1px solid rgba(255,107,107,0.35);text-decoration:none;">🚨 SOS Portal</a>
+          <a href="weather_alerts.php" class="btn btn-ghost" style="font-size:11.5px;padding:6px 12px;text-decoration:none;">🌊 Live Weather</a>
+        </div>
       </div>
+
+      <!-- Quick Credentials / Helpers -->
+      <div id="demoCredsBox" class="demo-creds" style="margin-top:18px;">
+        <div id="demoAdminCreds">
+          <b><?= t('admin_account') ?></b>:<br>
+          <code>admin</code> / <code>Admin@123</code> (District Relief Officer)
+          <button type="button" onclick="fillCreds('admin','Admin@123')" style="margin-left:8px;font-size:11px;padding:2px 8px;border-radius:4px;background:var(--primary);color:#fff;border:none;cursor:pointer;">Auto-fill</button>
+        </div>
+        <div id="demoNgoCreds" style="display:none;">
+          <b>NGO Operator Demo Accounts</b>:<br>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+            <button type="button" onclick="fillCreds('asha_operator','operator123')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.08);color:var(--ink);border:1px solid var(--border);cursor:pointer;">আশা ফাউন্ডেশন</button>
+            <button type="button" onclick="fillCreds('relief_operator','operator123')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.08);color:var(--ink);border:1px solid var(--border);cursor:pointer;">রিলিফ বাংলাদেশ</button>
+            <button type="button" onclick="fillCreds('humanity_operator','operator123')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.08);color:var(--ink);border:1px solid var(--border);cursor:pointer;">মানবিক সহায়তা</button>
+          </div>
+        </div>
+        <div id="demoCitizenCreds" style="display:none;">
+          <b><?= $lang==='bn' ? 'নাগরিক ডেমো একাউন্ট' : 'Citizen Demo Account' ?></b>:<br>
+          <span><?= $lang==='bn' ? 'রহিম উদ্দিন (NID: 1985011234501)' : 'Rahim Uddin (NID: 1985011234501)' ?></span>
+          <button type="button" onclick="fillCreds('1985011234501','Citizen@123')" style="margin-left:8px;font-size:11px;padding:2px 8px;border-radius:4px;background:var(--safe);color:#fff;border:none;cursor:pointer;">Auto-fill Citizen</button>
+        </div>
+      </div>
+
+      <!-- Registration Links for NGO & Citizen -->
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:20px; padding-top:14px; border-top:1px solid var(--border); font-size:13px; text-align:center;">
+        <div>
+          <?= $lang==='bn' ? 'সাধারণ নাগরিক / ত্রাণপ্রার্থী?' : 'Citizen or Beneficiary?' ?>
+          <a href="register_user.php" style="font-weight:600; color:var(--primary);">
+            <b><?= t('register_as_citizen_link') ?> →</b>
+          </a>
+        </div>
+        <div>
+          <?= $lang==='bn' ? 'নতুন এনজিও সংস্থা?' : 'New NGO Foundation?' ?>
+          <a href="register_ngo.php" style="font-weight:500;">
+            <?= t('register_as_ngo_link') ?>
+          </a>
+        </div>
+        <div>
+          <a href="guest_dashboard.php" style="color:var(--water); font-size:12.5px;">
+            🌐 <?= t('guest_view_link') ?> (<?= $lang==='bn'?'কোনো পাসওয়ার্ড ছাড়াই দেখুন':'Explore without login' ?>) →
+          </a>
+        </div>
+      </div>
+
     </div>
   </div>
+
+  <div class="scroll-hint" onclick="document.getElementById('howItWorks').scrollIntoView({behavior:'smooth'})">
+    <span><?= t('scroll_hint') ?></span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+  </div>
+</div>
+
+<script>
+const roleConfig = {
+  admin: {
+    heading: <?= json_encode($lang==='bn' ? 'এডমিন পোর্টাল' : 'Admin Portal') ?>,
+    sub: <?= json_encode($lang==='bn' ? 'জেলা ত্রাণ কর্মকর্তা ও সিস্টেম অ্যাডমিনিস্ট্রেটর' : 'District Relief Officer & System Administrator') ?>,
+    desc: <?= json_encode(t('login_tab_admin_desc')) ?>,
+    label: <?= json_encode($lang==='bn' ? 'এডমিন ইউজারনেম / ইমেইল' : 'Admin Username / Email') ?>,
+    placeholder: 'admin',
+    btnText: <?= json_encode(t('btn_login_admin')) ?>
+  },
+  ngo: {
+    heading: <?= json_encode($lang==='bn' ? 'এনজিও অপারেটর লগইন' : 'NGO Operator Login') ?>,
+    sub: <?= json_encode($lang==='bn' ? 'মাঠপর্যায়ে ত্রাণ বিতরণ ও ডুপ্লিকেট রোধ' : 'Field Relief Distribution & Duplicate Prevention') ?>,
+    desc: <?= json_encode(t('login_tab_ngo_desc')) ?>,
+    label: <?= json_encode($lang==='bn' ? 'অপারেটর ইউজারনেম / ইমেইল' : 'Operator Username / Email') ?>,
+    placeholder: 'asha_operator',
+    btnText: <?= json_encode(t('btn_login_ngo')) ?>
+  },
+  citizen: {
+    heading: <?= json_encode($lang==='bn' ? 'নাগরিক ও ত্রাণপ্রার্থী লগইন' : 'Citizen & Beneficiary Login') ?>,
+    sub: <?= json_encode($lang==='bn' ? 'ত্রাণ হিসেব, পরবর্তী তারিখ ও জরুরি আবেদনের জন্য' : 'View relief history, next eligible date & emergency relief') ?>,
+    desc: <?= json_encode(t('login_tab_citizen_desc')) ?>,
+    label: <?= json_encode($lang==='bn' ? 'জাতীয় পরিচয়পত্র (NID) বা মোবাইল নম্বর' : 'National ID (NID) or Mobile Phone') ?>,
+    placeholder: '1985011234501 or 01711234567',
+    btnText: <?= json_encode(t('btn_login_citizen')) ?>
+  },
+  guest: {
+    heading: <?= json_encode($lang==='bn' ? 'উন্মুক্ত পাবলিক ট্র্যাকিং' : 'Public Tracking') ?>,
+    sub: <?= json_encode($lang==='bn' ? 'লগইন ছাড়াই উন্মুক্ত ত্রাণ হিসেব ও আবহাওয়া তথ্য' : 'Open Relief Tracking & Alerts Without Login') ?>,
+    desc: <?= json_encode(t('login_tab_guest_desc')) ?>,
+    label: '',
+    placeholder: '',
+    btnText: ''
+  }
+};
+
+function selectRole(role) {
+  document.querySelectorAll('.login-role-tab').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.login-role-tab[data-role="${role}"]`);
+  if (btn) btn.classList.add('active');
+
+  const conf = roleConfig[role];
+  document.getElementById('portalHeading').textContent = conf.heading;
+  document.getElementById('portalSub').textContent = conf.sub;
+  document.getElementById('roleDesc').textContent = conf.desc;
+
+  const form = document.getElementById('authLoginForm');
+  const guestPanel = document.getElementById('guestPanel');
+  const demoBox = document.getElementById('demoCredsBox');
+  const adminDemo = document.getElementById('demoAdminCreds');
+  const ngoDemo = document.getElementById('demoNgoCreds');
+  const citizenDemo = document.getElementById('demoCitizenCreds');
+
+  if (role === 'guest') {
+    form.style.display = 'none';
+    guestPanel.style.display = 'block';
+    demoBox.style.display = 'none';
+  } else {
+    form.style.display = 'block';
+    guestPanel.style.display = 'none';
+    demoBox.style.display = 'block';
+
+    document.getElementById('usernameLabel').textContent = conf.label;
+    document.getElementById('usernameInput').placeholder = conf.placeholder;
+    document.getElementById('loginSubmitBtn').textContent = conf.btnText;
+
+    adminDemo.style.display = role === 'admin' ? 'block' : 'none';
+    ngoDemo.style.display = role === 'ngo' ? 'block' : 'none';
+    citizenDemo.style.display = role === 'citizen' ? 'block' : 'none';
+  }
+}
+
+document.querySelectorAll('.login-role-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectRole(btn.dataset.role);
+  });
+});
+
+function fillCreds(u, p) {
+  document.getElementById('usernameInput').value = u;
+  document.getElementById('passwordInput').value = p;
+}
+</script>
 
   <div class="scroll-hint" onclick="document.getElementById('howItWorks').scrollIntoView({behavior:'smooth'})">
     <span><?= t('scroll_hint') ?></span>
