@@ -3,6 +3,7 @@
 // Accessible to Everyone: Citizens, Beneficiaries, NGO Field Staff, and Admin
 $pageTitle = 'Weather & Flood Early Warning Alerts — ReliefX';
 require 'config.php';
+require 'includes/auth.php';
 $lang = currentLang();
 
 // Load stations list
@@ -519,3 +520,4 @@ function escapeHtml(str) {
 </script>
 
 <?php require 'includes/footer.php'; ?>
+
