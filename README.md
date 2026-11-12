@@ -133,6 +133,7 @@ ReliefX implements strict **Role-Based Access Control (RBAC)** across three dist
 | **NGO Warehouse Inventory** | `/stock.php` | ✅ Multi-NGO stock inspection & add | 🔒 Own NGO stock inspection & add | ❌ Restricted |
 | **NGO Organization Profile** | `/profile.php` | ✅ System Admin view | ✅ Upload custom logo & contact phone | ❌ Restricted |
 | **Public NGO Registration & OTP** | `/register_ngo.php` | N/A | ✅ Self-registration + 6-digit OTP | ✅ Open for NGOs |
+| **Weather & Flood Early Warning Alerts** | `/weather_alerts.php` | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
 | **Emergency SOS Rescue Portal** | `/sos_portal.php` | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
 | **AI Helpline Chatbot Assistant** | Floating widget on all pages | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
 
@@ -173,6 +174,7 @@ relief_system/
 ├── dashboard.php                         ← admin-only: fairness gauge, NGO performance & live map
 ├── duplicate_log.php                     ← admin-only: audit log of blocked duplicates & lookup trail
 ├── stock.php                             ← NGO inventory tracking & restock management
+├── weather_alerts.php                    ← public real-time hydrological & flood warning alert portal (unauthenticated)
 ├── sos_portal.php                        ← citizen-facing public SOS distress portal (unauthenticated)
 ├── register_ngo.php                      ← public self-registration for partner NGOs
 ├── verify_email.php                      ← 6-digit verification code entry for new NGOs
@@ -185,6 +187,7 @@ relief_system/
 │   ├── requirements.txt                  ← Python dependencies (fastapi, uvicorn, pydantic)
 │   └── README.md                         ← dedicated microservice architecture documentation
 ├── api/                                  ← AJAX endpoints (CSRF-protected & session-verified)
+│   ├── get_weather_alerts.php            ← real-time river stage, danger mark & rainfall station feed (public)
 │   ├── check_duplicate.php               ← live family & 7-day category duplicate check
 │   ├── fuzzy_check.php                   ← Unicode-aware Levenshtein duplicate name detector
 │   ├── save_family.php                   ← family registration with cross-check identity protection

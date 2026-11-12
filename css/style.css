@@ -1004,3 +1004,100 @@ body.login-page{ overflow-x:hidden; margin:0; }
 }
 .needs-checkbox input{ cursor:pointer; accent-color:var(--alert); }
 
+/* ---------- Weather & Flood Alerts Portal Styles ---------- */
+.weather-hero-banner{
+  background:linear-gradient(135deg, rgba(56,189,248,0.18), rgba(110,140,255,0.15), rgba(6,7,11,0.6));
+  border:1px solid rgba(56,189,248,0.35); border-radius:var(--radius); padding:24px; margin-bottom:24px;
+}
+.alert-ticker-wrap{
+  background:rgba(255,107,107,0.15); border:1px solid rgba(255,107,107,0.4);
+  border-radius:8px; padding:10px 16px; margin-bottom:18px; display:flex; align-items:center; gap:12px;
+}
+.alert-ticker-badge{
+  background:var(--alert); color:#fff; font-size:11px; font-weight:800; padding:3px 9px;
+  border-radius:4px; text-transform:uppercase; letter-spacing:.06em; flex-shrink:0; display:flex; align-items:center; gap:5px;
+}
+.alert-ticker-text{
+  font-size:13.5px; color:var(--ink); line-height:1.4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;
+}
+
+.weather-pills-scroll{
+  display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:20px; scrollbar-width:thin;
+}
+.weather-station-btn{
+  background:var(--surface); border:1px solid var(--border); color:var(--ink-soft);
+  padding:8px 16px; border-radius:24px; font-size:13px; font-weight:600; cursor:pointer;
+  white-space:nowrap; transition:all .2s var(--ease); display:inline-flex; align-items:center; gap:8px;
+}
+.weather-station-btn:hover{
+  background:rgba(56,189,248,0.12); color:var(--water); border-color:rgba(56,189,248,0.4);
+}
+.weather-station-btn.active{
+  background:linear-gradient(135deg, rgba(56,189,248,0.25), rgba(110,140,255,0.25));
+  color:#fff; border-color:var(--water); box-shadow:0 0 16px rgba(56,189,248,0.3); font-weight:700;
+}
+
+.station-status-pill{
+  font-size:10px; padding:2px 7px; border-radius:10px; text-transform:uppercase; font-weight:800;
+}
+.station-status-pill.critical{ background:rgba(255,107,107,0.25); color:var(--alert); border:1px solid rgba(255,107,107,0.4); }
+.station-status-pill.warning{ background:rgba(251,191,36,0.22); color:var(--warn); border:1px solid rgba(251,191,36,0.4); }
+.station-status-pill.advisory{ background:rgba(56,189,248,0.2); color:var(--water); border:1px solid rgba(56,189,248,0.35); }
+
+/* River Gauge Hydrograph Bar */
+.hydrograph-box{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:20px;
+}
+.river-level-display{
+  display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; margin-bottom:14px;
+}
+.river-level-big{
+  font-size:36px; font-weight:800; font-family:'Space Grotesk',sans-serif; color:var(--ink); line-height:1;
+}
+.river-level-big small{ font-size:18px; color:var(--ink-soft); font-weight:500; }
+.river-gauge-visual{
+  position:relative; width:100%; height:28px; background:rgba(255,255,255,0.06);
+  border-radius:14px; overflow:hidden; border:1px solid var(--border); margin:12px 0 8px;
+}
+.river-water-track{
+  height:100%; background:linear-gradient(90deg, #38BDF8, #6E8CFF, #FF6B6B);
+  border-radius:14px; transition:width 1s var(--ease);
+}
+.river-danger-marker{
+  position:absolute; top:0; bottom:0; width:3px; background:#FF4545; z-index:2; box-shadow:0 0 8px #FF4545;
+}
+.river-danger-text{
+  position:absolute; top:-20px; font-size:11px; font-weight:800; color:var(--alert); transform:translateX(-50%); white-space:nowrap;
+}
+
+/* Weather Stats Grid */
+.weather-kpi-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:20px;
+}
+.weather-kpi-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.weather-kpi-card .kpi-label{ font-size:12px; color:var(--ink-soft); font-weight:600; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+.weather-kpi-card .kpi-val{ font-size:24px; font-weight:800; color:var(--ink); font-family:'Space Grotesk',sans-serif; }
+.weather-kpi-card .kpi-sub{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; }
+
+/* 3-Day Forecast Cards */
+.forecast-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:20px;
+}
+.forecast-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; text-align:center;
+}
+.forecast-card .f-day{ font-size:13px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+.forecast-card .f-rain{ font-size:20px; font-weight:800; color:var(--water); font-family:'Space Grotesk',sans-serif; margin:6px 0; }
+.forecast-card .f-cond{ font-size:12px; color:var(--ink-soft); }
+
+/* Shelters List */
+.shelter-card-item{
+  background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px 16px;
+  display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:8px;
+}
+.shelter-card-item:hover{ border-color:var(--primary); }
+
+

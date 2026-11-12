@@ -47,6 +47,7 @@ $TRANSLATIONS = [
     'tab_duplicate_log'     => 'Duplicate Log',
     'tab_stock'              => 'NGO Stock',
     'tab_profile'             => 'প্রোফাইল',
+    'tab_weather_alerts'      => 'আবহাওয়া ও বন্যা সতর্কতা',
 
     // ---- login page ----
     'login_title'         => 'ত্রাণ বিতরণ সিস্টেম',
@@ -367,6 +368,7 @@ $TRANSLATIONS = [
     'tab_duplicate_log'     => 'Duplicate Log',
     'tab_stock'              => 'NGO Stock',
     'tab_profile'             => 'Profile',
+    'tab_weather_alerts'      => 'Weather & Alerts',
 
     'login_title'         => 'Relief Distribution System',
     'login_sub'            => 'Relief Distribution Duplicate Prevention',

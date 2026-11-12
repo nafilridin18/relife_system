@@ -35,6 +35,10 @@ $lang = currentLang();
       <a href="switch_lang.php?lang=bn" class="<?= $lang==='bn'?'active':'' ?>">বাংলা</a>
       <a href="switch_lang.php?lang=en" class="<?= $lang==='en'?'active':'' ?>">EN</a>
     </div>
+    <a href="weather_alerts.php" class="btn" style="font-size:11.5px;padding:5px 11px;background:rgba(56,189,248,0.18);color:var(--water);border:1px solid rgba(56,189,248,0.35);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+      <span class="icon-cloud-rain"><?= icon('cloud-rain',13) ?></span>
+      <span><?= $lang==='bn' ? 'আবহাওয়া ও বন্যা সতর্কতা' : 'Weather & Alerts' ?></span>
+    </a>
     <a href="index.php" class="btn btn-ghost" style="font-size:12.5px;padding:6px 12px;"><?= $lang === 'bn' ? 'লগইন পোর্টাল →' : 'Staff Login →' ?></a>
   </div>
 </div>

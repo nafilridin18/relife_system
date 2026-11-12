@@ -41,6 +41,10 @@ const CSRF_TOKEN = <?= json_encode(csrfToken()) ?>;
       <a href="switch_lang.php?lang=bn" class="<?= $lang==='bn'?'active':'' ?>">বাংলা</a>
       <a href="switch_lang.php?lang=en" class="<?= $lang==='en'?'active':'' ?>">EN</a>
     </div>
+    <a href="weather_alerts.php" class="btn" style="font-size:11.5px;padding:5px 11px;background:rgba(56,189,248,0.18);color:var(--water);border:1px solid rgba(56,189,248,0.35);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+      <span class="icon-cloud-rain"><?= icon('cloud-rain',13) ?></span>
+      <span><?= $lang==='bn' ? 'আবহাওয়া ও বন্যা সতর্কতা' : 'Weather & Alerts' ?></span>
+    </a>
     <a href="sos_portal.php" class="btn" style="font-size:11.5px;padding:5px 11px;background:rgba(255,107,107,0.18);color:var(--alert);border:1px solid rgba(255,107,107,0.35);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
       <span class="ai-pulse-dot" style="background:var(--alert);width:6px;height:6px;"></span>
       <span>SOS Portal</span>
@@ -61,6 +65,7 @@ const CSRF_TOKEN = <?= json_encode(csrfToken()) ?>;
 <?php if ($user): ?>
 <div class="tabs">
   <a class="tab-btn <?= $currentPage==='dashboard.php'?'active':'' ?>" href="dashboard.php"><?= icon('scale',16) ?><span><?= t('tab_dashboard') ?></span></a>
+  <a class="tab-btn <?= $currentPage==='weather_alerts.php'?'active':'' ?>" href="weather_alerts.php"><?= icon('cloud-rain',16) ?><span><?= t('tab_weather_alerts') ?></span></a>
   <a class="tab-btn <?= $currentPage==='distribute.php'?'active':'' ?>" href="distribute.php"><?= icon('package',16) ?><span><?= t('tab_distribute') ?></span></a>
   <a class="tab-btn <?= $currentPage==='register_family.php'?'active':'' ?>" href="register_family.php"><?= icon('users',16) ?><span><?= t('tab_register_family') ?></span></a>
   <a class="tab-btn <?= $currentPage==='stock.php'?'active':'' ?>" href="stock.php"><?= icon('box',16) ?><span><?= t('tab_stock') ?></span></a>
