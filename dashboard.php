@@ -79,6 +79,46 @@ require 'includes/header.php';
   </div>
 </div>
 
+<!-- =========================================================================
+     ReliefX v3.0: AI Flood Risk Prediction Widget (FastAPI Microservice)
+     ========================================================================= -->
+<div class="card" id="aiFloodAlertCard">
+  <div class="ai-section-header">
+    <h2>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;color:var(--alert);">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+      </svg>
+      <?= currentLang() === 'bn' ? 'AI বন্যা ঝুঁকি পূর্বাভাস ও সতর্কতা (Flood Prediction)' : 'AI Flood Risk Early Warning & Prediction' ?>
+    </h2>
+    <span class="ai-badge-live">
+      <span class="ai-pulse-dot"></span>
+      FastAPI v3.0 Active
+    </span>
+  </div>
+  <p class="sub">
+    <?= currentLang() === 'bn' 
+      ? 'হাইড্রোলজিক্যাল সেন্সর ডেটা ও আবহাওয়া পূর্বাভাসের ভিত্তিতে AI মডেল (XGBoost/LSTM) দ্বারা রিয়েল-টাইম পূর্বাভাস।' 
+      : 'Real-time hydrological forecasting and risk scoring powered by the ReliefX AI microservice.' ?>
+  </p>
+
+  <!-- Zone Selector Pills -->
+  <div class="ai-zone-pills" id="aiZonePills">
+    <button type="button" class="ai-zone-pill active" data-zone-id="2" data-lat="25.8073" data-lon="89.6295"><?= currentLang() === 'bn' ? 'কুড়িগ্রাম চর' : 'Kurigram Char' ?></button>
+    <button type="button" class="ai-zone-pill" data-zone-id="1" data-lat="25.0658" data-lon="91.4073"><?= currentLang() === 'bn' ? 'সুনামগঞ্জ সদর' : 'Sunamganj Sadar' ?></button>
+    <button type="button" class="ai-zone-pill" data-zone-id="6" data-lat="25.0833" data-lon="89.7833"><?= currentLang() === 'bn' ? 'জামালপুর ইসলামপুর' : 'Jamalpur Islampur' ?></button>
+    <button type="button" class="ai-zone-pill" data-zone-id="4" data-lat="25.0815" data-lon="91.7523"><?= currentLang() === 'bn' ? 'সিলেট কোম্পানীগঞ্জ' : 'Sylhet Companiganj' ?></button>
+    <button type="button" class="ai-zone-pill" data-zone-id="3" data-lat="25.3297" data-lon="89.5430"><?= currentLang() === 'bn' ? 'গাইবান্ধা উত্তর' : 'Gaibandha North' ?></button>
+  </div>
+
+  <!-- Dynamic Risk Banner -->
+  <div id="aiPredictionContent">
+    <div style="text-align:center;padding:24px;color:var(--ink-soft);">
+      <span class="spinner" style="display:inline-block;width:18px;height:18px;vertical-align:middle;margin-right:8px;"></span>
+      AI মাইক্রোসার্ভিস থেকে লাইভ পূর্বাভাস লোড হচ্ছে...
+    </div>
+  </div>
+</div>
+
 <div class="card">
   <h2><?= icon('scale') ?><?= t('fairness_h2') ?></h2>
   <p class="sub"><?= t('fairness_sub') ?></p>
@@ -101,6 +141,41 @@ require 'includes/header.php';
   <?php endforeach; ?>
 
   <div class="note"><?= t('fairness_note') ?></div>
+</div>
+
+<!-- =========================================================================
+     ReliefX v3.0: AI Geo-Urgency & Prioritized Warehouse Dispatch Widget
+     ========================================================================= -->
+<div class="card" id="aiGeoUrgencyCard">
+  <div class="ai-section-header">
+    <h2>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;color:var(--accent);">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+        <polyline points="2 17 12 22 22 17"></polyline>
+        <polyline points="2 12 12 17 22 12"></polyline>
+      </svg>
+      <?= currentLang() === 'bn' ? 'AI জরুরি অগ্রাধিকার সূচক ও গুদাম বিতরণ তালিকা (Geo-Urgency Dispatch)' : 'AI Geo-Urgency & Warehouse Dispatch Prioritization' ?>
+    </h2>
+    <span class="ai-badge-live" style="background:rgba(255,148,87,0.16);color:var(--accent);border-color:rgba(255,148,87,0.3);">
+      DBSCAN & Optimization Engine
+    </span>
+  </div>
+  <p class="sub">
+    <?= currentLang() === 'bn'
+      ? 'স্বয়ংক্রিয় অগ্রাধিকার ফর্মুলা দ্বারা কোন দুর্গত এলাকায় অবিলম্বে কোন গুদাম থেকে কোন ত্রাণ সামগ্রী পাঠাতে হবে তার তালিকা।'
+      : 'Automated urgency index based on flood severity, SOS density, and historically underserved factors.' ?>
+  </p>
+
+  <div class="formula-tag">
+    📐 Formula: <b>Urgency Index = (0.45 × Flood_Risk) + (0.35 × SOS_Density) + (0.20 × Underserved_Factor)</b>
+  </div>
+
+  <div id="aiDispatchListContainer">
+    <div style="text-align:center;padding:24px;color:var(--ink-soft);">
+      <span class="spinner" style="display:inline-block;width:18px;height:18px;vertical-align:middle;margin-right:8px;"></span>
+      AI জরুরি অগ্রাধিকার সূচক ও গুদাম তালিকা গণনা করা হচ্ছে...
+    </div>
+  </div>
 </div>
 
 <div class="card">

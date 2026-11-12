@@ -41,6 +41,10 @@ const CSRF_TOKEN = <?= json_encode(csrfToken()) ?>;
       <a href="switch_lang.php?lang=bn" class="<?= $lang==='bn'?'active':'' ?>">বাংলা</a>
       <a href="switch_lang.php?lang=en" class="<?= $lang==='en'?'active':'' ?>">EN</a>
     </div>
+    <a href="sos_portal.php" class="btn" style="font-size:11.5px;padding:5px 11px;background:rgba(255,107,107,0.18);color:var(--alert);border:1px solid rgba(255,107,107,0.35);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+      <span class="ai-pulse-dot" style="background:var(--alert);width:6px;height:6px;"></span>
+      <span>SOS Portal</span>
+    </a>
     <?php if ($user): ?>
     <span class="role-badge">
       <?= $user['role']==='admin' ? 'Admin' : htmlspecialchars(tEntity($user['ngo_name'] ?? 'NGO Operator')) ?>

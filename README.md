@@ -96,11 +96,17 @@ relief_system/
 ├── dashboard.php                         ← admin-only: fairness gauge, NGO performance & live map
 ├── duplicate_log.php                     ← admin-only: audit log of blocked duplicates & lookup trail
 ├── stock.php                             ← NGO inventory tracking & restock management
+├── sos_portal.php                        ← citizen-facing public SOS distress portal (unauthenticated)
 ├── register_ngo.php                      ← public self-registration for partner NGOs
 ├── verify_email.php                      ← 6-digit verification code entry for new NGOs
 ├── forgot_password.php                   ← automated email password reset workflow
 ├── profile.php                           ← NGO organization profile & custom logo upload
 ├── switch_lang.php                       ← language switcher (BN / EN) with session & cookie memory
+├── ai_microservice/                      ← Python AI Microservice (FastAPI scaffolding v3.0)
+│   ├── main.py                           ← FastAPI app, CORS, routes & mock AI/ML models
+│   ├── run.py                            ← smart port-conflict detector and Uvicorn launcher
+│   ├── requirements.txt                  ← Python dependencies (fastapi, uvicorn, pydantic)
+│   └── README.md                         ← dedicated microservice architecture documentation
 ├── api/                                  ← AJAX endpoints (CSRF-protected & session-verified)
 │   ├── check_duplicate.php               ← live family & 7-day category duplicate check
 │   ├── fuzzy_check.php                   ← Unicode-aware Levenshtein duplicate name detector
@@ -110,10 +116,11 @@ relief_system/
 │   ├── save_ngo_profile.php              ← updates NGO contact information & logo file
 │   └── save_stock.php                    ← adds inventory quantity to an NGO-item pair
 ├── css/
-│   └── style.css                         ← responsive dark/light glassmorphic UI stylesheet
+│   └── style.css                         ← responsive dark/light glassmorphic UI stylesheet + AI & SOS styling
 ├── js/
-│   ├── app.js                            ← frontend logic, AJAX lookups, Leaflet map & UI animations
+│   ├── app.js                            ← frontend logic, AJAX lookups, Leaflet map, AI widgets & SOS form
 │   ├── auth.js                           ← authentication validations, tabs, and login helpers
+│   ├── chatbot.js                        ← AI Helpline chatbot UI controller & FastAPI webhook caller
 │   └── theme.js                          ← dark/light mode toggle with localStorage persistence
 ├── img/
 │   ├── logo-icon.png                     ← circular ReliefX brand emblem & favicon
@@ -386,3 +393,60 @@ sequenceDiagram
 - **Dynamic Entity Translation:** Previously, switching between Bengali (`বাংলা`) and English (`EN`) only translated static interface labels, while stored database values (relief items, NGO names, distribution points, relief zones, units, and family head names) remained in Bengali. Version 2.1 introduces `tEntity()` and `tCategory()` in `includes/lang.php` with an entity dictionary. When English is selected, items like `চাল (Food)` dynamically render as `Rice (Food)`, `আশা ফাউন্ডেশন` becomes `Asha Foundation`, and table records adapt to the active language.
 - **Language Preference Persistence:** Language selection in `switch_lang.php` now saves to both `$_SESSION['lang']` and a long-lived browser cookie (`reliefx_lang`), ensuring language preferences persist across reloads, new tabs, and browser restarts.
 - **UTF-8mb4 Character Encoding Protection:** Windows command shell redirection previously caused `database.sql` to import using ANSI/CP1252 codepages, producing Mojibake corruption on Bengali Unicode strings. The database is now strictly imported with `--default-character-set=utf8mb4` to ensure Bengali characters render in clean Hind Siliguri typography.
+
+---
+
+## 8. ReliefX v3.0 — Python AI Microservice (FastAPI) & Citizen Helpline
+
+Version 3.0 upgrades the monolithic PHP/MySQL architecture into a hybrid modern system by integrating an asynchronous Python AI Microservice built with **FastAPI**.
+
+```
+┌─────────────────────────────────┐        REST JSON (CORS)       ┌─────────────────────────────────┐
+│        ReliefX Frontend         │ ◄───────────────────────────► │      Python AI Microservice     │
+│   PHP 8.2 + Glassmorphic UI     │                               │      FastAPI + Uvicorn 8001     │
+│                                 │                               │                                 │
+│  - dashboard.php (Risk & Queue) │ ──── GET /flood-prediction ─► │  - XGBoost/LSTM Mock Model      │
+│  - dashboard.php (Geo Urgency)  │ ──── GET /geo-urgency ──────► │  - Urgency Index Formula Engine │
+│  - chatbot.js (Helpline Widget) │ ──── POST /chat/webhook ────► │  - NLP Entity Extractor & Ticket│
+│  - sos_portal.php (Citizen SOS) │ ──── POST /sos-request ─────► │  - DBSCAN Spatial Cluster Engine│
+└─────────────────────────────────┘                               └─────────────────────────────────┘
+                 │
+                 ▼ SQL Queries
+      MySQL 8.0 (Port 3307 / 3306)
+```
+
+### 8.1 Microservice Endpoints (`/api/v1`)
+
+| Method | Endpoint | Description | Input / Parameters | Response Highlights |
+|---|---|---|---|---|
+| `GET` | `/api/v1/flood-prediction` | Flood severity prediction | `lat`, `lon` (query params) | `risk_level` (`Low`, `Moderate`, `Severe`, `Critical`), water level forecast, recommended action |
+| `GET` | `/api/v1/geo-urgency` | Geo-urgency index & NGO dispatch list | None | `urgency_index` via `(0.45 * Flood_Risk) + (0.35 * SOS_Density) + (0.20 * Underserved_Factor)` + prioritized warehouse dispatch queue |
+| `POST` | `/api/v1/chat/webhook` | Bilingual AI helpline webhook | JSON `{ message, lang, session_id }` | Conversational response, extracted `name`, `gps`, `landmark`, and simulated Emergency Rescue Ticket |
+| `POST` | `/api/v1/sos-request` | Citizen SOS submission & clustering | JSON `{ name, phone, lat, lon, landmark, people_count, needs }` | Spatial clustering (simulating DBSCAN with 50m radius) into a grouped `rescue_node` |
+
+### 8.2 Frontend UI Components Integrated
+
+1. **Flood Risk Alert Card (`dashboard.php` & `js/app.js`):**
+   - Admin-facing widget displaying real-time AI risk level badge, water level forecast, rainfall estimate, and tactical advisories across active flood zones (Chilmari, Kurigram, Rowmari, Nageshwari).
+2. **Prioritized NGO Warehouse Dispatch Queue (`dashboard.php` & `js/app.js`):**
+   - Renders warehouse dispatch prioritization ordered by calculated Urgency Index, including recommended supply allocation (food packets, water purification tablets, medical units).
+3. **Citizen-Facing AI Helpline Chatbot (`includes/footer.php` & `js/chatbot.js`):**
+   - Globally accessible floating widget available across all pages.
+   - Handles bilingual queries (Bangla & English), quick SOS chips, auto-scrolling, and parses simulated emergency rescue tickets with unique Ticket IDs.
+4. **Emergency SOS Rescue Portal (`sos_portal.php` & `js/app.js`):**
+   - Public-facing page requiring no login or authentication.
+   - Includes browser GPS auto-detection (`navigator.geolocation`), urgent needs checklist (boats, medicine, dry rations, shelter), and visual feedback rendering the assigned AI Rescue Cluster Node.
+
+### 8.3 Launching the Microservice
+
+```bash
+# 1. Install dependencies
+pip install -r ai_microservice/requirements.txt
+
+# 2. Run the AI Microservice
+cd ai_microservice
+python run.py
+# Microservice starts on http://127.0.0.1:8001 (or 8000 if available)
+# Interactive Swagger Documentation: http://127.0.0.1:8001/docs
+```
+
