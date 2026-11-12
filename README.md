@@ -1,51 +1,75 @@
-**🔴 Live Demo:** https://reliefx.stratifyxglobal.com/
+# ReliefX v3.0 — AI-Enhanced Disaster Relief & Fair Allocation System
+
+[![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat&logo=php&logoColor=white)](https://www.php.net/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-v0.115+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+**🔴 Live Demo:** https://reliefx.stratifyxglobal.com/  
+**🤖 AI Microservice Docs:** http://127.0.0.1:8001/docs  
 
 ---
 
-# Relief Distribution Duplicate Prevention System — Setup Guide
-
-A full-stack project ready to run directly on XAMPP: **HTML + CSS + JavaScript + PHP + MySQL**.
+A modern, production-ready disaster relief management system combining a robust **PHP/MySQL Monolith** for secure relief distribution and privacy-preserving identity verification with a **Python FastAPI Microservice** for flood prediction, spatial clustering, and automated citizen rescue triage.
 
 ## 0. Problem Definition, Stakeholders & USP (DBMS guideline — Component A)
 
-**Problem:** Two real problems keep recurring in post-flood relief distribution in Bangladesh:
-1. The same family receives the same type of relief multiple times from different NGOs, while the neighboring family gets nothing at all.
-2. Sensitive information like NID is written in open registers, creating a privacy risk.
+**Problem:** Two recurring challenges plague post-flood humanitarian operations in Bangladesh:
+1. **Inequitable Distribution & Duplication:** The same family receives identical relief supplies multiple times from different NGOs within days, while remote neighboring families receive nothing.
+2. **Privacy & Identity Leakage:** Sensitive personally identifiable information (NID, birth certificates) is transcribed into open physical registers, creating severe identity theft risks.
 
-This system solves both problems at the database level (via trigger + procedure + constraint) — not just with frontend validation.
+**ReliefX** solves both problems through multi-layered database guarantees (triggers, stored procedures, constraints) coupled with real-time geospatial intelligence.
 
-**Stakeholders / System Users:** District Relief Officer (admin), NGO operator (ngo_operator), affected families (end beneficiary — doesn't use the system directly, but is the subject of the data).
+**Stakeholders / System Users:**
+- **District Relief Officer (Admin):** Oversees fairness metrics across upazilas, monitors live flood risk alerts, and manages NGO distribution queues.
+- **NGO Field Operator (`ngo_operator`):** Verifies beneficiary eligibility, records distributions, and manages physical warehouse inventories.
+- **Affected Citizens / Beneficiaries:** Transmit emergency SOS signals via the public portal or chat with the AI Helpline assistant in Bengali or English.
 
-**Constraints / Complexity:** During a disaster, multiple NGOs enter data in parallel (concurrency race condition — see §7.1 Bug #2), NID cannot be stored in plain text (privacy), and spelling variations in Bengali names (e.g. "Rahim/Rahiim") can cause duplicate registrations (fuzzy matching is needed).
+**USP (Unique Selling Points):**
+1. **Zero Plaintext NID Storage:** NIDs are irreversibly hashed using salted SHA-256 (`nid_hash`) before persisting to disk.
+2. **7-Day Category-Based Duplicate Shield:** Enforced at both the database trigger level and within the `sp_distribute_relief` stored procedure (defense-in-depth).
+3. **Unicode-Aware Bengali Fuzzy Matching:** Custom `mb_levenshtein()` algorithm handles phonetic and orthographic variations in Bengali names.
+4. **Population-Proportional Fairness Dashboard:** Dynamically balances relief allocations relative to population density using the `v_area_fairness` view.
+5. **AI Rescue Clustering & Geo-Urgency (v3.0):** Real-time spatial clustering (DBSCAN 50m radius) groups stranded victims into actionable tactical nodes for armed forces and rescue teams.
 
-**USP (Unique Selling Point):**
-1. NID is never stored in plain text — only a salted SHA-256 hash (`nid_hash`).
-2. 7-day category-based duplicate blocking, enforced at two levels — trigger + stored procedure (defense-in-depth).
-3. Custom Unicode-aware fuzzy matching for Bengali names (`mb_levenshtein()`, because PHP's built-in `levenshtein()` and MySQL's `SOUNDEX()` don't work for Bengali).
-4. Population-proportional fairness dashboard, based on the `v_area_fairness` VIEW.
+---
 
-## 1. Setup
+## 1. Setup & Installation
 
 ### Option A: Using XAMPP (Apache + MySQL)
 
-1. Copy the entire `relief_system` folder into XAMPP's `htdocs` folder:
-   - Windows: `C:\xampp\htdocs\relief_system\` (or create a directory junction: `mklink /J C:\xampp\htdocs\relief_system <project_path>`)
-   - macOS: `/Applications/XAMPP/htdocs/relief_system/`
-2. From the XAMPP Control Panel, start both **Apache** and **MySQL**
-3. Open `http://localhost/phpmyadmin` in your browser → **Import** tab → select `database.sql` (ensure character set is set to **utf8mb4**) → click **Go**
-   - Alternatively via terminal (prevents Windows ANSI/CP1252 encoding issues):
+1. Copy the `relief_system` directory into your XAMPP web root:
+   - Windows: `C:\xampp\htdocs\relief_system\` (or directory junction: `mklink /J C:\xampp\htdocs\relief_system <path>`)
+   - macOS / Linux: `/opt/lampp/htdocs/relief_system/`
+2. Start **Apache** and **MySQL** from the XAMPP Control Panel.
+3. Import the database schema with UTF-8 character encoding:
+   - Open `http://localhost/phpmyadmin` → **Import** → select `database.sql` (charset: **utf8mb4**) → **Go**
+   - Or via terminal:
      ```bash
      mysql --default-character-set=utf8mb4 -u root -p relief_db < database.sql
      ```
-   *(this creates `relief_db` and loads all tables, triggers, stored procedures, views, and initial seed data)*
-4. Open `http://localhost/relief_system/install.php` in your browser — this creates the initial admin and operator accounts (run this only once)
-5. Open `http://localhost/relief_system/` to access the application.
+4. Run the one-time installer to seed initial roles, items, and demo families:
+   ```
+   http://localhost/relief_system/install.php
+   ```
+5. Launch the Python AI Microservice (see §1.3 below).
+6. Open `http://localhost/relief_system/` in your browser.
 
-### Option B: Using PHP Built-in Development Server
+---
 
-1. Ensure MySQL is running (e.g. from XAMPP or standalone service).
-2. Configure `.env` if your MySQL port differs from standard 3306 (e.g. `DB_HOST=127.0.0.1;port=3307`).
-3. Import `database.sql` with utf8mb4 character set:
+### Option B: Using PHP Built-in Development Server (Recommended)
+
+1. Ensure MySQL is running (e.g. MariaDB on port 3306 or 3307).
+2. Configure `.env` (copy from `.env.example` if needed):
+   ```ini
+   DB_HOST=127.0.0.1;port=3307
+   DB_NAME=relief_db
+   DB_USER=root
+   DB_PASS=
+   NID_SALT=relief2026_secret_salt
+   ```
+3. Import the database schema:
    ```bash
    mysql --default-character-set=utf8mb4 -u root -P 3307 -h 127.0.0.1 -e "source database.sql"
    ```
@@ -53,24 +77,49 @@ This system solves both problems at the database level (via trigger + procedure 
    ```bash
    php install.php
    ```
-5. Start the server from the project directory:
+5. Start the PHP server on port 8000:
    ```bash
-   php -S localhost:8000
+   php -S 0.0.0.0:8000 -t .
    ```
-6. Open **`http://localhost:8000`** in your browser.
+6. Access the web application at **`http://localhost:8000`**.
 
-> **Environment Variables (`.env`):**
-> DB credentials, ports, and the NID hashing salt are read from `.env` (see §7.2).
-> The repository includes `.env.example` as a template — copy it to `.env` and adjust as needed. If `.env` is absent, the system seamlessly falls back to default localhost parameters.
+---
 
-## 2. Login credentials
+### 1.3 Running the Python AI Microservice (FastAPI)
 
-| Username | Password | Role | Description |
+1. Install Python prerequisites:
+   ```bash
+   pip install -r ai_microservice/requirements.txt
+   ```
+2. Start the microservice:
+   ```bash
+   cd ai_microservice
+   python run.py
+   ```
+   *The launcher automatically binds to port `8001` if port `8000` is reserved by PHP/Apache.*
+3. Verify interactive API documentation:
+   - **Swagger UI:** `http://127.0.0.1:8001/docs`
+   - **ReDoc:** `http://127.0.0.1:8001/redoc`
+
+---
+
+## 2. Authentication & Credentials
+
+### Staff & Administrative Accounts
+
+| Username | Password | Role | Access Level |
 |---|---|---|---|
-| `admin` | `Admin@123` | District Relief Officer | Full admin access (Dashboard, Audit Log, All Families) |
-| `asha_operator` | `Ngo@123` | Operator for Asha Foundation | Relief entry & family registration |
-| `relief_operator` | `Ngo@123` | Operator for Relief Bangladesh | Relief entry & family registration |
-| `sfv_operator` | `Ngo@123` | Operator for Save the Flood Victims | Relief entry & family registration |
+| `admin` | `Admin@123` | District Relief Officer | Full admin access (Fairness Dashboard, Audit Log, All Families, AI Geo-Urgency) |
+| `asha_operator` | `Ngo@123` | Asha Foundation | Relief entry, inventory tracking & family registration |
+| `relief_operator` | `Ngo@123` | Relief Bangladesh | Relief entry, inventory tracking & family registration |
+| `sfv_operator` | `Ngo@123` | Save the Flood Victims | Relief entry, inventory tracking & family registration |
+
+### Public Citizen Portals (No Authentication Required)
+
+| Page | Route | Description |
+|---|---|---|
+| **Citizen SOS Portal** | `/sos_portal.php` | Emergency distress signal submission with browser GPS auto-detection and live clustering response. |
+| **AI Helpline Chatbot** | Globally on every page | Floating interactive assistant in the bottom-right corner for bilingual flood queries and rescue ticket dispatch. |
 
 ## 3. Complete File Structure
 
@@ -168,6 +217,19 @@ relief_system/
    "ERROR: Insufficient stock for this NGO/item" when that amount is requested, and the distribution is not inserted.
 8. **CSRF protection (Version 2.0 — new):** Try changing the `CSRF_TOKEN` variable from browser DevTools and
    calling any api/*.php endpoint → you'll get a 403 with a "session expired" message, and nothing gets inserted.
+9. **Flood Risk & Prioritized Warehouse Dispatch (v3.0 — AI Microservice):** Log in as `admin` and navigate to `dashboard.php`.
+   Observe the top AI widgets: the **Flood Risk Alert Card** asynchronously queries `GET /api/v1/flood-prediction` to render
+   live river stage warnings, rainfall forecasts, and severity indicators. The **Geo-Urgency & Warehouse Dispatch Queue**
+   renders real-time supply allocations computed from the weighted formula:
+   $$\text{Urgency Index} = (0.45 \times \text{Flood Risk}) + (0.35 \times \text{SOS Density}) + (0.20 \times \text{Underserved Factor})$$
+10. **Bilingual AI Helpline Chatbot (v3.0 — AI Microservice):** Click the circular AI Helpline launcher in the bottom-right
+    corner of any page. Submit a prompt such as `"বাঁচাও, আমরা চিলমারী প্রাইমারি স্কুলের ছাদে আটকা!"` or `"Send rescue boat to Kurigram"`.
+    The bot calls `POST /api/v1/chat/webhook`, extracts the stranded victim's name, coordinates, and landmark, and automatically
+    returns a simulated **Emergency Rescue Ticket** with a unique Ticket ID and high-priority dispatch flag.
+11. **Citizen Emergency SOS Portal & DBSCAN Spatial Clustering (v3.0 — Citizen Facing):**
+    Open `sos_portal.php` in a private/incognito window (no login required). Click **"Use My Live Location"** to fetch GPS coordinates
+    via the browser Geolocation API, check the required relief supplies (Boat, Medical, Food), and click **Transmit Emergency SOS Signal**.
+    The form submits to `POST /api/v1/sos-request`, grouping the caller into a tactical 50m spatial cluster (Rescue Node) and providing immediate visual feedback with rescue dispatch coordinates and emergency hotlines (999, 1090, 16163).
 
 ## 5. Mapping to Guideline Components
 
@@ -449,4 +511,35 @@ python run.py
 # Microservice starts on http://127.0.0.1:8001 (or 8000 if available)
 # Interactive Swagger Documentation: http://127.0.0.1:8001/docs
 ```
+
+### 8.4 Verification & Testing Examples (cURL)
+
+#### 1. Flood Risk Prediction
+```bash
+curl -X GET "http://127.0.0.1:8001/api/v1/flood-prediction?lat=25.7538&lon=89.6738"
+```
+*Response contains simulated risk level, rainfall forecast, river level in meters, and evacuation advisory.*
+
+#### 2. Geo-Urgency Index & Warehouse Prioritization
+```bash
+curl -X GET "http://127.0.0.1:8001/api/v1/geo-urgency"
+```
+*Response contains ranked zones by urgency index and allocated food, water, and medical kits.*
+
+#### 3. AI Helpline NLP Webhook
+```bash
+curl -X POST "http://127.0.0.1:8001/api/v1/chat/webhook" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "আমি রহিম, চিলমারী স্কুলের ছাদে ৫ জন সহ আটকে আছি। জিপিএস 25.56, 89.67", "lang": "bn"}'
+```
+*Extracts name, GPS, landmark, and generates an emergency rescue ticket.*
+
+#### 4. Citizen SOS Request & DBSCAN Spatial Clustering
+```bash
+curl -X POST "http://127.0.0.1:8001/api/v1/sos-request" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "করিম মিয়া", "phone": "01711000000", "lat": 25.5612, "lon": 89.6723, "landmark": "নদীর বাঁধের সংলগ্ন", "people_count": 4, "needs": ["boat", "medical"]}'
+```
+*Groups the request into a tactical 50m Rescue Node cluster with assigned boat teams.*
+
 
