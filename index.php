@@ -178,11 +178,11 @@ $brandZones = 8;
           <button type="button" onclick="fillCreds('admin','Admin@123')" style="margin-left:8px;font-size:11px;padding:2px 8px;border-radius:4px;background:var(--primary);color:#fff;border:none;cursor:pointer;">Auto-fill</button>
         </div>
         <div id="demoNgoCreds" style="display:none;">
-          <b>NGO Operator Demo Accounts</b>:<br>
+          <b>NGO Operator Demo Accounts (Password: <code>operator123</code>)</b>:<br>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
             <button type="button" onclick="fillCreds('asha_operator','operator123')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.08);color:var(--ink);border:1px solid var(--border);cursor:pointer;">আশা ফাউন্ডেশন</button>
             <button type="button" onclick="fillCreds('relief_operator','operator123')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.08);color:var(--ink);border:1px solid var(--border);cursor:pointer;">রিলিফ বাংলাদেশ</button>
-            <button type="button" onclick="fillCreds('humanity_operator','operator123')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.08);color:var(--ink);border:1px solid var(--border);cursor:pointer;">মানবিক সহায়তা</button>
+            <button type="button" onclick="fillCreds('sfv_operator','operator123')" style="font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,0.08);color:var(--ink);border:1px solid var(--border);cursor:pointer;">সেভ দ্য ফ্লাড (SFV)</button>
           </div>
         </div>
         <div id="demoCitizenCreds" style="display:none;">
