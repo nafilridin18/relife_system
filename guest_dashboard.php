@@ -260,7 +260,7 @@ $user = currentUser();
           <?php foreach ($recentStream as $r): ?>
           <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
             <td style="padding:10px 8px; color:var(--ink-soft); font-family:'Space Grotesk',sans-serif;">
-              <?= date('d M Y, h:i A', strtotime($r['distributed_at'])) ?>
+              <?= date('d M Y, h:i A', strtotime($r['dist_date'])) ?>
             </td>
             <td style="padding:10px 8px;">
               <?= htmlspecialchars(tEntity($r['upazila'])) ?>, <small><?= htmlspecialchars(tEntity($r['district'])) ?></small>
