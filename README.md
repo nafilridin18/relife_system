@@ -200,11 +200,13 @@ relief_system/
 │   ├── save_ngo_profile.php              ← updates NGO contact information & logo file
 │   └── save_stock.php                    ← adds inventory quantity to an NGO-item pair
 ├── css/
+│   ├── leaflet.css                       ← self-contained local Leaflet map styling (no CDN dependency)
 │   └── style.css                         ← responsive dark/light glassmorphic UI stylesheet + AI & SOS styling
 ├── js/
-│   ├── app.js                            ← frontend logic, AJAX lookups, Leaflet map, AI widgets & SOS form
+│   ├── app.js                            ← frontend logic, AJAX lookups, Leaflet map with GPS & zoom, AI widgets & SOS form
 │   ├── auth.js                           ← authentication validations, tabs, and login helpers
-│   ├── chatbot.js                        ← AI Helpline chatbot UI controller & FastAPI webhook caller
+│   ├── chatbot.js                        ← AI Helpline chatbot UI controller, 6-topic FAQ engine & FastAPI webhook caller
+│   ├── leaflet.js                        ← self-contained local Leaflet interactive map library
 │   └── theme.js                          ← dark/light mode toggle with localStorage persistence
 ├── img/
 │   ├── logo-icon.png                     ← circular ReliefX brand emblem & favicon

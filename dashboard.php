@@ -74,7 +74,7 @@ foreach ($fairness as $row) {
     ];
 }
 
-$extraHead = '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">';
+$extraHead = '<link rel="stylesheet" href="css/leaflet.css">';
 
 require 'includes/header.php';
 ?>
@@ -87,13 +87,26 @@ require 'includes/header.php';
 </div>
 
 <div class="card">
-  <h2><?= icon('map-pin') ?><?= t('map_h2') ?></h2>
-  <p class="sub"><?= t('map_sub') ?></p>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:10px;">
+    <div>
+      <h2 style="margin:0;"><?= icon('map-pin') ?><?= t('map_h2') ?></h2>
+      <p class="sub" style="margin:4px 0 0;"><?= t('map_sub') ?></p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button type="button" class="btn btn-ghost" id="btnMapResetZoom" style="font-size:12px;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;">
+        <span>🇧🇩</span> <?= currentLang() === 'bn' ? 'বাংলাদেশ ভিউ' : 'Reset View' ?>
+      </button>
+      <button type="button" class="btn" id="btnMapLocateMe" style="font-size:12px;padding:6px 14px;background:var(--primary);color:#fff;border:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+        <span>📍</span> <?= currentLang() === 'bn' ? 'আমার লাইভ GPS অবস্থান' : 'My Live GPS Location' ?>
+      </button>
+    </div>
+  </div>
   <div id="reliefMap" class="map-box"></div>
   <div class="map-legend">
     <span><i style="background:var(--alert)"></i> <?= t('legend_low') ?></span>
     <span><i style="background:var(--warn)"></i> <?= t('legend_partial') ?></span>
     <span><i style="background:var(--safe)"></i> <?= t('legend_fair') ?></span>
+    <span style="margin-left:auto;color:var(--ink-soft);font-size:11.5px;">🔍 +/- বাটনে বা স্ক্রলে জুম করুন · মার্কার ক্লিক করে এলাকা জানুন</span>
   </div>
 </div>
 
@@ -228,7 +241,7 @@ require 'includes/header.php';
   <?php endforeach; endif; ?>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="js/leaflet.js"></script>
 <script>
 const RELIEF_AREAS = <?= json_encode($mapAreas) ?>;
 const MAP_I18N = {

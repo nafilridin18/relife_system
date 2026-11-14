@@ -37,9 +37,12 @@
     </div>
   </div>
   <div class="chat-suggestions" id="reliefxChatSuggestions">
-    <button type="button" class="chat-chip" data-query="বাঁচাও, আমরা চিলমারী প্রাইমারি স্কুলের ছাদে আটকা!">🚨 জরুরি উদ্ধার (Emergency SOS)</button>
-    <button type="button" class="chat-chip" data-query="ত্রাণ পাওয়ার যোগ্যতা কীভাবে চেক করব?">📦 ত্রাণ যোগ্যতা (Relief Eligibility)</button>
-    <button type="button" class="chat-chip" data-query="জরুরি হটলাইন নম্বরগুলো দিন">📞 হটলাইন (Emergency Numbers)</button>
+    <button type="button" class="chat-chip" data-query="ত্রাণ পাওয়ার যোগ্যতা কীভাবে চেক করব এবং ৭ দিনের নিয়ম কী?">📦 <?= currentLang() === 'bn' ? 'ত্রাণ পাওয়ার যোগ্যতা ও নিয়ম' : 'Relief Eligibility & Rules' ?></button>
+    <button type="button" class="chat-chip" data-query="জরুরি উদ্ধার প্রয়োজন, পানিতে আটকা পড়েছি!">🚨 <?= currentLang() === 'bn' ? 'জরুরি উদ্ধার (Emergency Rescue)' : 'Emergency Rescue / SOS' ?></button>
+    <button type="button" class="chat-chip" data-query="লাইভ আবহাওয়া ও নদীর পানির বিপদসীমা পরিস্থিতি কেমন?">🌊 <?= currentLang() === 'bn' ? 'আবহাওয়া ও বন্যা পরিস্থিতি' : 'Weather & Flood Alerts' ?></button>
+    <button type="button" class="chat-chip" data-query="নাগরিক একাউন্ট কীভাবে খুলব এবং কী কী লাগবে?">👤 <?= currentLang() === 'bn' ? 'নাগরিক একাউন্ট রেজিস্ট্রেশন' : 'Citizen Account Signup' ?></button>
+    <button type="button" class="chat-chip" data-query="৫ দিন পর জরুরি ত্রাণের আবেদন করার নিয়ম কী?">⏳ <?= currentLang() === 'bn' ? '৫ দিন পর জরুরি আবেদন' : '5-Day Emergency Protocol' ?></button>
+    <button type="button" class="chat-chip" data-query="জরুরি হটলাইন নম্বরগুলো কী কী?">📞 <?= currentLang() === 'bn' ? 'জরুরি হটলাইন নম্বরসমূহ' : 'Emergency Hotlines' ?></button>
   </div>
   <div class="chat-input-bar">
     <input type="text" class="chat-input" id="reliefxChatInput" placeholder="<?= currentLang() === 'bn' ? 'বার্তা লিখুন বা SOS পাঠান...' : 'Type message or send SOS...' ?>" autocomplete="off">

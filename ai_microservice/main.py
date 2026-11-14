@@ -372,77 +372,84 @@ def get_geo_urgency():
 def chat_webhook(req: ChatWebhookRequest):
     """
     Accepts conversational citizen input in Bengali or English.
-    Extracts rescue entities (Name, GPS, Landmark) and simulates generating
-    an automated Emergency Rescue Ticket with response telemetry.
+    Handles relief eligibility rules, 5-day emergency protocol, weather & river stages,
+    citizen registration, emergency hotlines, and extracts distress entities for rescue tickets.
     """
     text = req.message.strip()
     is_bn = any('\u0980' <= char <= '\u09FF' for char in text)
     lower_text = text.lower()
 
-    # Emergency keyword heuristics
-    emergency_keywords = [
-        "বাঁচাও", "আটকা", "উদ্ধার", "পানি উঠেছে", "ছাদে", "তলিয়ে", "সাহায্য চাই", "জরুরি", "খাবার নেই", "বন্যা", "ভাসছে",
-        "rescue", "help", "trapped", "sos", "emergency", "flood", "drowning", "roof", "water rising", "stranded", "starving"
+    # Distinguish information queries from actual physical distress
+    is_info_query = any(k in lower_text or k in text for k in [
+        "কীভাবে", "কী", "কেমন", "নিয়ম", "নিয়ম", "নম্বর", "নাম্বার", "ফোন", "শর্ত", "তথ্য", "খুলব", "আবেদন",
+        "how", "what", "rule", "rules", "number", "numbers", "hotline", "phone", "info", "status", "check"
+    ])
+
+    # 1. Genuine Emergency SOS Evacuation Trigger
+    emergency_evac_keywords = [
+        "বাঁচাও", "বাচাও", "আটকা পড়েছি", "আটকা পড়েছি", "আটকা", "উদ্ধার করুন", "উদ্ধার চাই", "ছাদে আটকা", 
+        "পানিতে আটকা", "ডুবছে", "তলিয়ে গেছে", "তলিয়ে গেছে", "নৌকা পাঠান", "স্পিডবোট", "খাবার নেই", 
+        "rescue", "trapped", "drowning", "roof", "water rising rapidly", "send boat", "stranded"
     ]
-    is_emergency = any(kw in lower_text or kw in text for kw in emergency_keywords)
+    is_emergency = any(kw in lower_text or kw in text for kw in emergency_evac_keywords) and not (
+        ("যোগ্যতা" in text or "খুলব" in text or "নম্বর" in text or "হটলাইন" in text or "আবহাওয়া" in text) and is_info_query
+    )
 
-    # 1. Entity Extraction: Name
-    name = None
-    name_patterns = [
-        r'(?:নাম|my name is|i am|name is|iam)\s*[:=\-]?\s*([A-Za-z\u0980-\u09FF\s]{2,25})',
-        r'([A-Za-z\u0980-\u09FF\s]{2,20})\s*(?:বলছি|speaking|here)',
-    ]
-    for p in name_patterns:
-        m = re.search(p, text, re.IGNORECASE)
-        if m:
-            candidate = m.group(1).strip()
-            if len(candidate) > 2 and candidate.lower() not in ["rescue", "help", "emergency", "sos"]:
-                name = candidate
-                break
-    if not name:
-        name = "নাগরিক (Citizen In Need)" if is_bn else "Citizen In Need"
-
-    # 2. Entity Extraction: GPS Coordinates
-    detected_gps = None
-    gps_match = re.search(r'([2-3]\d\.\d{3,6})[,\s]+([8-9]\d\.\d{3,6})', text)
-    if gps_match:
-        detected_gps = f"{gps_match.group(1)}, {gps_match.group(2)}"
-    elif req.user_location and "lat" in req.user_location and "lon" in req.user_location:
-        detected_gps = f"{req.user_location['lat']}, {req.user_location['lon']}"
-    else:
-        detected_gps = "25.8073, 89.6295 (Estimated Chilmari Ghat)"
-
-    # 3. Entity Extraction: Landmark
-    landmark = None
-    landmark_keywords = [
-        "স্কুল", "বিদ্যালয়", "বাঁধ", "ঘাট", "ছাদ", "মসজিদ", "মাদ্রাসা", "ব্রিজ", "পোল", "ইউনিয়ন পরিষদ",
-        "school", "roof", "bridge", "ghat", "river", "mosque", "embankment", "parishad", "hospital"
-    ]
-    for lm in landmark_keywords:
-        if lm in lower_text or lm in text:
-            # extract surrounding 40 chars
-            idx = text.lower().find(lm)
-            start = max(0, idx - 15)
-            end = min(len(text), idx + 35)
-            landmark = text[start:end].strip()
-            break
-    if not landmark:
-        landmark = "কাছের সাইক্লোন শেল্টার বা নদীর বাঁধ (Nearby embankment/shelter)" if is_bn else "Near river embankment/shelter"
-
-    # 4. Immediate needs
-    needs = []
-    if any(k in lower_text or k in text for k in ["ঔষধ", "ডাক্তার", "মেডিকেল", "অসুস্থ", "medical", "doctor", "medicine"]):
-        needs.append("Medical Aid")
-    if any(k in lower_text or k in text for k in ["নৌকা", "স্পিডবোট", "আটকা", "boat", "speed boat", "evacuate"]):
-        needs.append("Rescue Boat")
-    if any(k in lower_text or k in text for k in ["খাবার", "পানি", "খিদে", "food", "water", "rice"]):
-        needs.append("Emergency Rations & Water")
-    if not needs:
-        needs = ["Evacuation & High-Energy Food"]
-
-    # Construct response
     ticket = None
     if is_emergency:
+        # 1. Entity Extraction: Name
+        name = None
+        name_patterns = [
+            r'(?:নাম|my name is|i am|name is|iam)\s*[:=\-]?\s*([A-Za-z\u0980-\u09FF\s]{2,25})',
+            r'([A-Za-z\u0980-\u09FF\s]{2,20})\s*(?:বলছি|speaking|here)',
+        ]
+        for p in name_patterns:
+            m = re.search(p, text, re.IGNORECASE)
+            if m:
+                candidate = m.group(1).strip()
+                if len(candidate) > 2 and candidate.lower() not in ["rescue", "help", "emergency", "sos"]:
+                    name = candidate
+                    break
+        if not name:
+            name = "নাগরিক (Citizen In Need)" if is_bn else "Citizen In Need"
+
+        # 2. Entity Extraction: GPS Coordinates
+        detected_gps = None
+        gps_match = re.search(r'([2-3]\d\.\d{3,6})[,\s]+([8-9]\d\.\d{3,6})', text)
+        if gps_match:
+            detected_gps = f"{gps_match.group(1)}, {gps_match.group(2)}"
+        elif req.user_location and "lat" in req.user_location and "lon" in req.user_location:
+            detected_gps = f"{req.user_location['lat']}, {req.user_location['lon']}"
+        else:
+            detected_gps = "25.8073, 89.6295 (Estimated Chilmari Ghat)"
+
+        # 3. Entity Extraction: Landmark
+        landmark = None
+        landmark_keywords = [
+            "স্কুল", "বিদ্যালয়", "বাঁধ", "ঘাট", "ছাদ", "মসজিদ", "মাদ্রাসা", "ব্রিজ", "পোল", "ইউনিয়ন পরিষদ",
+            "school", "roof", "bridge", "ghat", "river", "mosque", "embankment", "parishad", "hospital"
+        ]
+        for lm in landmark_keywords:
+            if lm in lower_text or lm in text:
+                idx = text.lower().find(lm)
+                start = max(0, idx - 15)
+                end = min(len(text), idx + 35)
+                landmark = text[start:end].strip()
+                break
+        if not landmark:
+            landmark = "কাছের সাইক্লোন শেল্টার বা নদীর বাঁধ (Nearby embankment/shelter)" if is_bn else "Near river embankment/shelter"
+
+        # 4. Needs
+        needs = []
+        if any(k in lower_text or k in text for k in ["ঔষধ", "ডাক্তার", "মেডিকেল", "অসুস্থ", "medical", "doctor", "medicine"]):
+            needs.append("Medical Aid")
+        if any(k in lower_text or k in text for k in ["নৌকা", "স্পিডবোট", "আটকা", "boat", "speed boat", "evacuate"]):
+            needs.append("Rescue Boat")
+        if any(k in lower_text or k in text for k in ["খাবার", "পানি", "খিদে", "food", "water", "rice"]):
+            needs.append("Emergency Rations & Water")
+        if not needs:
+            needs = ["Evacuation & High-Energy Food"]
+
         ticket_id = f"TKT-2026-{random.randint(4000, 9999)}"
         ticket = RescueTicket(
             ticket_id=ticket_id,
@@ -458,37 +465,160 @@ def chat_webhook(req: ChatWebhookRequest):
         if is_bn:
             reply = (
                 f"🚨 **জরুরি উদ্ধার টিকেট খোলা হয়েছে (#{ticket_id})!**\n\n"
-                f"ধৈর্য ধরুন **{name}**, আপনার বার্তাটি সাথে সাথে ত্রাণ ও উদ্ধার কমান্ড সেন্টারে পাঠানো হয়েছে।\n"
+                f"ধৈর্য ধরুন **{name}**, আপনার উদ্ধার বার্তাটি সরাসরি দুর্যোগ কমান্ড সেন্টারে পাঠানো হয়েছে।\n"
                 f"📍 **শনাক্তকৃত অবস্থান:** {landmark} (GPS: `{detected_gps}`)\n"
-                f"🛥️ **নিয়োজিত টিম:** বাংলাদেশ ফায়ার সার্ভিস ও সেনা স্পিডবোট ইউনিট।\n"
-                f"📞 কোনো প্রশ্ন থাকলে সরকারি হটলাইন **৯৯৯** অথবা **১০৯০** এ কল করুন। আপনার মোবাইল চার্জ বাঁচিয়ে রাখুন।"
+                f"🛥️ **নিয়োজিত ইউনিট:** ফায়ার সার্ভিস ও সেনা উদ্ধারকারী দল।\n"
+                f"📞 তাত্ক্ষণিক সাহায্যের জন্য এখনই ডায়াল করুন: **৯৯৯ (জাতীয় জরুরি সেবা)** অথবা **১০৯০ (দুর্যোগ সেল)**।"
             )
         else:
             reply = (
                 f"🚨 **Emergency Rescue Ticket Created (#{ticket_id})!**\n\n"
-                f"Stay calm **{name}**, your distress call has been routed to the Disaster Relief Command Cell.\n"
+                f"Stay calm **{name}**, your distress request is dispatched to the Disaster Command Center.\n"
                 f"📍 **Detected Location:** {landmark} (GPS: `{detected_gps}`)\n"
-                f"🛥️ **Assigned Unit:** Fire Service & Armed Forces Rescue Boat Unit #3.\n"
-                f"📞 You can also dial national emergency hotline **999** or disaster cell **1090**."
+                f"🛥️ **Assigned Unit:** Fire Service & Armed Forces Rescue Team.\n"
+                f"📞 Immediate hotlines: Dial **999** (National Emergency) or **1090** (Disaster Warning)."
             )
         suggestions = ["📍 Send Updated GPS", "🚨 Call 999 Directly", "📦 Check Relief Distribution"]
-    else:
-        # General informative query
+
+    # 2. Frequent Question: Relief Eligibility & 7-Day Cooldown Rule
+    elif any(k in lower_text or k in text for k in ["যোগ্যতা", "কবে পাব", "৭ দিন", "৭ দিনের", "eligibility", "rule", "cooldown", "ডুপ্লিকেট"]):
         if is_bn:
             reply = (
-                "নমস্কার/সালাম! আমি **ReliefX AI হেল্পলাইন**। আমি কীভাবে সাহায্য করতে পারি?\n\n"
-                "• ত্রাণ বিতরণ বা পরিবারের যোগ্যতা যাচাই করতে আপনার **NID** নম্বর লিখুন।\n"
-                "• বন্যায় আটকা পড়ে থাকলে আপনার **নাম, অবস্থান বা ল্যান্ডমার্ক** জানান—আমি সাথে সাথে উদ্ধার টিকেট খুলে দেব।\n"
-                "• নিকটস্থ ত্রাণ কেন্দ্র বা মজুত দেখতে উপরের মেনু ব্যবহার করুন।"
+                "📦 **ত্রাণ পাওয়ার যোগ্যতা ও ৭ দিনের নিয়ম:**\n\n"
+                "১. **স্বচ্ছ বিতরণ ও ডুপ্লিকেট রোধ:** ReliefX সিস্টেমে প্রতিটি পরিবার একটি নির্দিষ্ট ক্যাটাগরিতে (যেমন খাদ্যসামগ্রী, জরুরি ওষুধ, বা বস্ত্র) ত্রাণ পাওয়ার পর **পরবর্তী ৭ দিন** ওই ক্যাটাগরির জন্য অপেক্ষমাণ থাকে।\n"
+                "২. **ডাটাবেস সুরক্ষা:** ৭ দিনের মধ্যে পুনরায় একই ক্যাটাগরিতে ত্রাণ নেওয়ার চেষ্টা করা হলে ডাটাবেসের ইউনিক কনস্ট্রেইন্ট তা ব্লক করে এবং অডিট লগে সংরক্ষণ করে।\n"
+                "৩. **যোগ্যতা যাচাই করার উপায়:** আপনার **Citizen একাউন্টে** লগইন করুন। ড্যাশবোর্ডে আপনি পূর্বে কী কী ত্রাণ পেয়েছেন, কোন এনজিও দিয়েছে এবং পরবর্তী ত্রাণ পাওয়ার তারিখ স্পষ্টভাবে দেখতে পাবেন।"
             )
         else:
             reply = (
-                "Hello! I am the **ReliefX AI Helpline Assistant**.\n\n"
-                "• Need emergency flood evacuation? Send your **name, landmark, or GPS** to create an instant rescue ticket.\n"
-                "• Inquiring about relief eligibility? Enter your family **NID** to check distribution status.\n"
-                "• You can also visit our public SOS portal to submit bulk relief requests."
+                "📦 **Relief Eligibility & The 7-Day Rule:**\n\n"
+                "1. **Fair Allocation & Duplicate Prevention:** In ReliefX, after receiving relief in a category (Food, Medical, Shelter), a family enters a **7-day cooldown** for that category.\n"
+                "2. **Automatic Guard:** Attempts to claim relief within 7 days are automatically rejected by the database and logged to the duplicate prevention audit trail.\n"
+                "3. **How to check:** Log in to your **Citizen Account** to view your distribution history and exact countdown to your next eligible relief date."
             )
-        suggestions = ["🚨 Emergency SOS Rescue", "📦 How does relief distribution work?", "🗺️ Show Fairness Map"]
+        suggestions = ["⏳ ৫ দিন পর জরুরি আবেদন", "👤 নাগরিক একাউন্ট রেজিস্ট্রেশন", "📞 জরুরি হটলাইন নম্বরসমূহ"]
+
+    # 3. Frequent Question: 5-Day Emergency Protocol
+    elif any(k in lower_text or k in text for k in ["৫ দিন", "জরুরি ত্রাণ", "জরুরি আবেদন", "emergency relief", "5-day", "5 day", "আবেদন"]):
+        if is_bn:
+            reply = (
+                "⏳ **৫ দিন পর জরুরি ত্রাণের বিশেষ আবেদন প্রোটোকল:**\n\n"
+                "• **জরুরি প্রোটোকল কী?** সাধারণত ত্রাণের স্বাভাবিক বিরতি ৭ দিন। কিন্তু গুরুতর বন্যা পরিস্থিতিতে কোনো পরিবার যদি টানা **৫ দিন কোনো ত্রাণ না পেয়ে থাকে**, তবে তারা বিশেষ জরুরি ত্রাণের আবেদন করতে পারে।\n"
+                "• **আবেদনের নিয়ম:**\n"
+                "  ১. **Citizen Dashboard** (`citizen_dashboard.php`) এ আপনার NID ও পাসওয়ার্ড দিয়ে লগইন করুন।\n"
+                "  ২. 'জরুরি ত্রাণের আবেদন' কার্ডে পরিবারের বর্তমান অবস্থা ও জরুরি প্রয়োজন (খাদ্য/ওষুধ/শিশু খাদ্য) লিখে সাবমিট করুন।\n"
+                "  ৩. সংশ্লিষ্ট এলাকার ফিল্ড এনজিও অপারেটরদের কাছে তাৎক্ষণিক অগ্রাধিকার নোটিফিকেশন চলে যাবে।"
+            )
+        else:
+            reply = (
+                "⏳ **5-Day Emergency Relief Protocol:**\n\n"
+                "• **What is it?** While the standard cooldown is 7 days, families facing severe distress who haven't received relief for **5 consecutive days** are permitted to submit an expedited emergency relief petition.\n"
+                "• **How to apply:**\n"
+                "  1. Log into your **Citizen Dashboard** (`citizen_dashboard.php`).\n"
+                "  2. Complete the emergency application form specifying urgent needs (rations, baby food, clean water).\n"
+                "  3. Local registered NGO operators receive immediate priority dispatch alerts."
+            )
+        suggestions = ["📦 ত্রাণ পাওয়ার যোগ্যতা ও নিয়ম", "👤 নাগরিক একাউন্ট রেজিস্ট্রেশন", "🌊 আবহাওয়া ও বন্যা পরিস্থিতি"]
+
+    # 4. Frequent Question: Weather & River Water Levels
+    elif any(k in lower_text or k in text for k in ["আবহাওয়া", "বন্যা পরিস্থিতি", "নদীর পানি", "বিপদসীমা", "বৃষ্টি", "weather", "flood", "river", "danger level", "forecast"]):
+        if is_bn:
+            reply = (
+                "🌊 **লাইভ আবহাওয়া ও নদী বন্যা সতর্কতা:**\n\n"
+                "• **মনিটরিং স্টেশন:** ReliefX লাইভ পোর্টালে (`weather_alerts.php`) কুড়িগ্রাম (ধরলা নদী), সুনামগঞ্জ (সুরমা নদী), সিলেট (সুরমা/কুশিয়ারা), জামালপুর (যমুনা নদী) সহ ৮টি প্রধান স্টেশনের ডেটা প্রতি ঘন্টায় আপডেট হয়।\n"
+                "• **বর্তমান অবস্থা:** ধরলা ও সুরমা নদীর পানি বিপদসীমার উপর দিয়ে প্রবাহিত হচ্ছে। কুড়িগ্রাম ও সুনামগঞ্জ সদরে উচ্চ সতর্কতা (High Alert) জারি রয়েছে।\n"
+                "• বিস্তারিত লাইভ ভিজুয়ালাইজেশন ও গ্রাফ দেখতে উপরের **Weather & Alerts** মেনুতে ক্লিক করুন।"
+            )
+        else:
+            reply = (
+                "🌊 **Live Weather & Flood Alert Overview:**\n\n"
+                "• **Monitoring Network:** ReliefX tracks 8 critical flood zones (Kurigram Dharla, Sunamganj Surma, Sylhet Kushiyara, Jamalpur Jamuna, etc.) via `weather_alerts.php`.\n"
+                "• **Current Warning:** Dharla and Surma rivers are flowing near or above dangerous flood thresholds with continued rainfall forecasted upstream.\n"
+                "• Check the top **Weather & Alerts** tab to see real-time river gauges and precipitation trends."
+            )
+        suggestions = ["🚨 জরুরি উদ্ধার (Emergency Rescue)", "📦 ত্রাণ পাওয়ার যোগ্যতা ও নিয়ম", "📞 জরুরি হটলাইন নম্বরসমূহ"]
+
+    # 5. Frequent Question: Citizen Account Registration & Login
+    elif any(k in lower_text or k in text for k in ["নাগরিক একাউন্ট", "রেজিস্ট্রেশন", "খুলব", "একাউন্ট", "citizen", "signup", "register", "login"]):
+        if is_bn:
+            reply = (
+                "👤 **নাগরিক একাউন্ট খোলার সহজ নিয়ম:**\n\n"
+                "১. লগইন পেজের নিচে **'Open Citizen Account'** বা `register_user.php` লিঙ্কে ক্লিক করুন।\n"
+                "২. আপনার নাম, সক্রিয় মোবাইল নম্বর, ১০ বা ১৭ ডিজিটের **জাতীয় পরিচয়পত্র (NID)** এবং একটি পাসওয়ার্ড লিখুন।\n"
+                "৩. একাউন্ট খোলা সম্পন্ন হলে লগইন করে আপনি আপনার পরিবারের সকল পূর্ববর্তী ত্রাণের রেকর্ড, পরবর্তী পাওয়ার তারিখ এবং ৫ দিন পর জরুরি ত্রাণের আবেদন করতে পারবেন।\n"
+                "৪. একাউন্ট না খুলেও সাধারণ তথ্য দেখতে চাইলে লগইন পেজের **'Continue as Guest'** বেছে নিতে পারেন।"
+            )
+        else:
+            reply = (
+                "👤 **How to Register a Citizen Account:**\n\n"
+                "1. Click **'Open Citizen Account'** or visit `register_user.php`.\n"
+                "2. Provide your Full Name, Active Phone Number, 10 or 17 digit **NID**, and set a password.\n"
+                "3. Once registered, log in to check your family's relief distribution history, upcoming eligibility, and submit 5-day emergency petitions.\n"
+                "4. You can also explore public distribution records anytime by clicking **'Continue as Guest'**."
+            )
+        suggestions = ["📦 ত্রাণ পাওয়ার যোগ্যতা ও নিয়ম", "⏳ ৫ দিন পর জরুরি আবেদন", "🌊 আবহাওয়া ও বন্যা পরিস্থিতি"]
+
+    # 6. Frequent Question: Emergency Hotlines
+    elif any(k in lower_text or k in text for k in ["হটলাইন", "নম্বর", "নাম্বার", "ফোন", "কল", "hotline", "number", "numbers", "phone", "contact", "999", "1090"]):
+        if is_bn:
+            reply = (
+                "📞 **জাতীয় জরুরি দুর্যোগ হেল্পলাইন নম্বরসমূহ:**\n\n"
+                "• 🚨 **৯৯৯ (999)**: জাতীয় জরুরি সেবা (পুলিশ, অ্যাম্বুলেন্স, ফায়ার সার্ভিস উদ্ধার)\n"
+                "• 🌊 **১০৯০ (1090)**: দুর্যোগ প্রস্তুতি ও নদী বন্যা আগাম সতর্কতা বার্তা (টোল-ফ্রি)\n"
+                "• ℹ️ **৩৩৩ (333)**: সরকারি তথ্য, সেবা ও সামাজিক সহায়তা হেল্পলাইন\n"
+                "• 🩺 **১৬১৬৩ (16163)**: বাংলাদেশ রেড ক্রিসেন্ট সোসাইটি জরুরি সাড়া সেল"
+            )
+        else:
+            reply = (
+                "📞 **National Disaster Emergency Hotlines:**\n\n"
+                "• 🚨 **999**: National Emergency Services (Police, Ambulance, Fire & Rescue)\n"
+                "• 🌊 **1090**: Flood Early Warning & Disaster Weather Helpline (Toll-Free)\n"
+                "• ℹ️ **333**: National Citizen Grievance & Government Services Helpline\n"
+                "• 🩺 **16163**: Bangladesh Red Crescent Emergency Relief Cell"
+            )
+        suggestions = ["🚨 জরুরি উদ্ধার (Emergency Rescue)", "📦 ত্রাণ পাওয়ার যোগ্যতা ও নিয়ম", "🌊 আবহাওয়া ও বন্যা পরিস্থিতি"]
+
+    # 7. Greetings & Friendly Default
+    elif any(k in lower_text or k in text for k in ["hi", "hello", "hey", "সালাম", "নমস্কার", "কেমন আছেন", "kemon asen"]):
+        if is_bn:
+            reply = (
+                "👋 **নমস্কার / সালাম!** আমি **ReliefX AI স্মার্ট সহকারী**।\n\n"
+                "বন্যা ও ত্রাণ সংক্রান্ত যেকোনো তথ্যের জন্য আমি সর্বদা প্রস্তুত। আপনি জানতে পারেন:\n"
+                "• 📦 ত্রাণ পাওয়ার যোগ্যতা ও ৭ দিনের নিয়ম\n"
+                "• ⏳ ৫ দিন পর জরুরি ত্রাণের আবেদন প্রক্রিয়া\n"
+                "• 🌊 লাইভ আবহাওয়া ও নদী বন্যা সতর্কতা\n"
+                "• 👤 নাগরিক একাউন্ট তৈরি ও ট্র্যাকিং\n"
+                "• 🚨 বিপদে পড়লে তাত্ক্ষণিক উদ্ধার টিকেট"
+            )
+        else:
+            reply = (
+                "👋 **Hello!** Welcome to **ReliefX AI Helpline Assistant**.\n\n"
+                "How can I assist you today? You can ask me about:\n"
+                "• 📦 Relief eligibility and duplicate prevention rules\n"
+                "• ⏳ 5-day emergency relief application protocol\n"
+                "• 🌊 Real-time river stages and flood forecasts\n"
+                "• 👤 Citizen account registration\n"
+                "• 🚨 Emergency flood rescue triage"
+            )
+        suggestions = ["📦 ত্রাণ পাওয়ার যোগ্যতা ও নিয়ম", "🌊 আবহাওয়া ও বন্যা পরিস্থিতি", "📞 জরুরি হটলাইন নম্বরসমূহ"]
+
+    else:
+        # Fallback informative query
+        if is_bn:
+            reply = (
+                "ℹ️ আপনার বার্তাটির জন্য ধন্যবাদ। আমি **ReliefX AI হেল্পলাইন**।\n\n"
+                "• ত্রাণ বিতরণের যোগ্যতা যাচাই করতে আপনার **NID** নম্বর লিখুন।\n"
+                "• জরুরি বন্যায় আটকা পড়ে থাকলে আপনার **অবস্থান বা ল্যান্ডমার্ক** জানান—আমি উদ্ধার টিকেট তৈরি করব।\n"
+                "• অথবা নিচের প্রস্তাবিত প্রশ্নগুলোর যেকোনো একটিতে ক্লিক করুন।"
+            )
+        else:
+            reply = (
+                "ℹ️ Thank you for your inquiry. I am the **ReliefX AI Helpline**.\n\n"
+                "• Enter your **NID** to check family relief status.\n"
+                "• If stranded by floodwaters, share your **landmark or GPS** for an immediate rescue ticket.\n"
+                "• Or select one of the quick topics below."
+            )
+        suggestions = ["📦 ত্রাণ পাওয়ার যোগ্যতা ও নিয়ম", "⏳ ৫ দিন পর জরুরি আবেদন", "📞 জরুরি হটলাইন নম্বরসমূহ"]
 
     return ChatWebhookResponse(
         reply=reply,

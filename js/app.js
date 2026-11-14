@@ -70,7 +70,7 @@ function jt(key) {
   return I18N[lang][key];
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function startApp() {
   animateFillBars();
   animateKpiCounters();
   if (typeof RELIEF_AREAS !== 'undefined') initReliefMap(RELIEF_AREAS, MAP_I18N);
@@ -142,7 +142,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
 
 /* ---------- Dashboard: animated fill bars + KPI counters + Leaflet map ---------- */
 
@@ -175,28 +181,138 @@ function animateKpiCounters() {
 // Renders the relief-zone map (dashboard.php only)
 function initReliefMap(areas, i18n) {
   const el = document.getElementById('reliefMap');
-  if (!el || typeof L === 'undefined') return;
+  if (!el || typeof L === 'undefined') {
+    console.warn('Leaflet map container or L library not available.');
+    return;
+  }
 
-  const map = L.map('reliefMap').setView([23.9, 90.4], 6.6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 17,
-  }).addTo(map);
+  // Prevent double initialization if re-run
+  if (el._leaflet_id) {
+    return;
+  }
 
+  // Centered on Bangladesh
+  const map = L.map('reliefMap', {
+    center: [23.8103, 90.4125],
+    zoom: 7,
+    minZoom: 6,
+    maxZoom: 18,
+    zoomControl: true,
+    scrollWheelZoom: true
+  });
+
+  // OpenStreetMap tile layer with multiple subdomains
+  const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+    subdomains: ['a', 'b', 'c']
+  });
+  tileLayer.addTo(map);
+
+  // Fallback to CartoDB tiles if OSM encounters an issue
+  tileLayer.on('tileerror', function() {
+    if (!map._cartoFallback) {
+      map._cartoFallback = true;
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
+        attribution: '&copy; CartoDB &copy; OpenStreetMap',
+        maxZoom: 19
+      }).addTo(map);
+    }
+  });
+
+  // Render relief zones
   areas.forEach(a => {
     const color = a.ratio < 0.5 ? '#C0392B' : (a.ratio < 1 ? '#B9770E' : '#1E8F5F');
-    const radius = 9 + Math.min(a.population / 4000, 16);
+    const radius = 10 + Math.min(a.population / 3500, 16);
     L.circleMarker([a.lat, a.lng], {
-      radius, color: '#fff', weight: 2, fillColor: color, fillOpacity: 0.85,
+      radius,
+      color: '#ffffff',
+      weight: 2.5,
+      fillColor: color,
+      fillOpacity: 0.88,
     })
       .addTo(map)
       .bindPopup(
-        `<b>${escapeHtml(a.name)}</b><br>` +
-        `${i18n.population}: ${a.population.toLocaleString()}<br>` +
-        `${i18n.received}: ${a.received}<br>` +
-        `${i18n.fairness}: ${a.ratio.toFixed(2)}×`
+        `<div style="font-family:sans-serif;font-size:13px;line-height:1.5;">` +
+        `<b style="font-size:14px;color:#0f172a;">${escapeHtml(a.name)}</b><br>` +
+        `<span style="color:#64748b;">${i18n.population}:</span> <b>${a.population.toLocaleString()}</b><br>` +
+        `<span style="color:#64748b;">${i18n.received}:</span> <b>${a.received}</b><br>` +
+        `<span style="color:#64748b;">${i18n.fairness}:</span> <b style="color:${color};font-size:13.5px;">${a.ratio.toFixed(2)}×</b>` +
+        `</div>`
       );
   });
+
+  // Force map to recalculate container dimensions after render to prevent grey/blank canvas
+  setTimeout(() => map.invalidateSize(), 250);
+  setTimeout(() => map.invalidateSize(), 800);
+
+  // GPS Live Location integration
+  let userGpsMarker = null;
+  const btnLocate = document.getElementById('btnMapLocateMe');
+  if (btnLocate) {
+    btnLocate.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert(typeof CUR_LANG !== 'undefined' && CUR_LANG === 'bn' ? 'আপনার ব্রাউজারে GPS সাপোর্ট নেই।' : 'Geolocation is not supported by your browser.');
+        return;
+      }
+      btnLocate.disabled = true;
+      const originalText = btnLocate.innerHTML;
+      btnLocate.innerHTML = '<span class="spinner" style="display:inline-block;width:12px;height:12px;margin-right:4px;"></span> ' + (typeof CUR_LANG !== 'undefined' && CUR_LANG === 'bn' ? 'GPS অনুসন্ধান...' : 'Locating...');
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          btnLocate.disabled = false;
+          btnLocate.innerHTML = originalText;
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const accuracy = Math.round(pos.coords.accuracy);
+
+          if (userGpsMarker) {
+            map.removeLayer(userGpsMarker);
+          }
+
+          const gpsIcon = L.divIcon({
+            className: 'gps-pulse-icon',
+            html: '<div class="gps-pulse-core"><div class="gps-pulse-ring"></div></div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          });
+
+          userGpsMarker = L.marker([lat, lng], { icon: gpsIcon }).addTo(map);
+          userGpsMarker.bindPopup(
+            `<div style="font-family:sans-serif;font-size:13px;line-height:1.5;">` +
+            `<b style="color:#2563eb;">📍 আপনার লাইভ GPS অবস্থান</b><br>` +
+            `অক্ষাংশ (Lat): <b>${lat.toFixed(5)}</b><br>` +
+            `দ্রাঘিমাংশ (Lng): <b>${lng.toFixed(5)}</b><br>` +
+            `<small style="color:#64748b;">নির্ভুলতা: ±${accuracy} মিটার</small>` +
+            `</div>`
+          ).openPopup();
+
+          map.flyTo([lat, lng], 13, { duration: 1.5 });
+        },
+        (err) => {
+          btnLocate.disabled = false;
+          btnLocate.innerHTML = originalText;
+          console.warn('Geolocation error:', err);
+          const isBn = typeof CUR_LANG !== 'undefined' && CUR_LANG === 'bn';
+          let msg = isBn ? 'GPS অবস্থান পাওয়া যায়নি। ব্রাউজারের লোকেশন পারমিশন চালু করুন।' : 'Could not retrieve GPS location. Please enable location permissions in your browser.';
+          if (err.code === 1) {
+            msg = isBn ? 'লোকেশন অনুমতি বাতিল করা হয়েছে। ব্রাউজারে লোকেশন পারমিশন দিন।' : 'Location permission denied. Please allow location access in your browser settings.';
+          }
+          alert(msg);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+  }
+
+  // Reset Zoom button handler
+  const btnReset = document.getElementById('btnMapResetZoom');
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      map.flyTo([23.8103, 90.4125], 7, { duration: 1.2 });
+    });
+  }
 }
 
 function updateZoneStatus(upazilaId) {
@@ -644,7 +760,7 @@ function escapeHtml(str) {
    ReliefX v3.0: AI Microservice Dashboard, Flood Risk & SOS Portal Handlers
    ========================================================================== */
 
-const AI_API_BASE = window.AI_API_BASE || (window.location.port === '8000' ? 'http://localhost:8001' : 'http://localhost:8000');
+const AI_API_BASE = window.AI_API_BASE || 'http://localhost:8001';
 
 /* ---------- 1. Admin Dashboard: Flood Prediction & Geo-Urgency ---------- */
 
