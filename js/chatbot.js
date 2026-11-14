@@ -73,7 +73,8 @@ function initChatWidget() {
     const typingId = appendTypingIndicator();
 
     try {
-      const response = await fetch(`${AI_API_HOST}/api/v1/chat/webhook`, {
+      // Connect through local same-origin bridge which connects to FastAPI or built-in engine
+      const response = await fetch('api/ai_chat.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

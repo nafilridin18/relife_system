@@ -55,8 +55,8 @@
   </div>
 </div>
 
-<script src="js/theme.js"></script>
-<script src="js/app.js"></script>
-<script src="js/chatbot.js"></script>
+<script src="js/theme.js?v=<?= @filemtime(__DIR__ . '/../js/theme.js') ?: time() ?>"></script>
+<script src="js/app.js?v=<?= @filemtime(__DIR__ . '/../js/app.js') ?: time() ?>"></script>
+<script src="js/chatbot.js?v=<?= @filemtime(__DIR__ . '/../js/chatbot.js') ?: time() ?>"></script>
 </body>
 </html>

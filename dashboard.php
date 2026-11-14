@@ -74,7 +74,7 @@ foreach ($fairness as $row) {
     ];
 }
 
-$extraHead = '<link rel="stylesheet" href="css/leaflet.css">';
+$extraHead = '<link rel="stylesheet" href="css/leaflet.css?v=' . filemtime(__DIR__ . '/css/leaflet.css') . '">';
 
 require 'includes/header.php';
 ?>
@@ -241,10 +241,10 @@ require 'includes/header.php';
   <?php endforeach; endif; ?>
 </div>
 
-<script src="js/leaflet.js"></script>
+<script src="js/leaflet.js?v=<?= filemtime(__DIR__ . '/js/leaflet.js') ?>"></script>
 <script>
-const RELIEF_AREAS = <?= json_encode($mapAreas) ?>;
-const MAP_I18N = {
+window.RELIEF_AREAS = <?= json_encode($mapAreas) ?>;
+window.MAP_I18N = {
   population: <?= json_encode(t('population')) ?>,
   received: <?= json_encode(t('received')) ?>,
   fairness: <?= json_encode(t('fairness_val_label')) ?>,

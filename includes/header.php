@@ -14,7 +14,7 @@ $lang = currentLang();
 <title><?= htmlspecialchars($pageTitle ?? t('brand_title')) ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=<?= @filemtime(__DIR__ . '/../css/style.css') ?: time() ?>">
 <link rel="icon" type="image/png" href="img/logo-icon.png">
 <?= $extraHead ?? '' ?>
 </head>

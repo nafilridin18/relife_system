@@ -73,7 +73,9 @@ function jt(key) {
 function startApp() {
   animateFillBars();
   animateKpiCounters();
-  if (typeof RELIEF_AREAS !== 'undefined') initReliefMap(RELIEF_AREAS, MAP_I18N);
+  const areas = (typeof RELIEF_AREAS !== 'undefined') ? RELIEF_AREAS : (window.RELIEF_AREAS || null);
+  const i18n = (typeof MAP_I18N !== 'undefined') ? MAP_I18N : (window.MAP_I18N || {});
+  if (areas) initReliefMap(areas, i18n);
   if (document.getElementById('aiFloodAlertCard')) initAiDashboard();
 
   document.addEventListener('keydown', (e) => {
@@ -181,12 +183,15 @@ function animateKpiCounters() {
 // Renders the relief-zone map (dashboard.php only)
 function initReliefMap(areas, i18n) {
   const el = document.getElementById('reliefMap');
-  if (!el || typeof L === 'undefined') {
-    console.warn('Leaflet map container or L library not available.');
+  if (!el) return;
+
+  if (typeof L === 'undefined') {
+    console.warn('Leaflet library (L) not ready yet, retrying in 200ms...');
+    setTimeout(() => initReliefMap(areas, i18n), 200);
     return;
   }
 
-  // Prevent double initialization if re-run
+  // Prevent double initialization if already initialized
   if (el._leaflet_id) {
     return;
   }
@@ -1244,9 +1249,6 @@ function renderSosSuccess(data) {
       <button type="button" class="btn btn-ghost" onclick="location.reload()">+ ${isBn ? 'নতুন আরেকটি সংকেত পাঠান' : 'Submit Another Distress Signal'}</button>
     </div>
   `;
-
-  resultBox.scrollIntoView({ behavior: 'smooth' });
-}
 
   resultBox.scrollIntoView({ behavior: 'smooth' });
 }
