@@ -216,3 +216,4 @@ echo json_encode([
     'ticket' => null,
     'suggested_actions' => $actions
 ], JSON_UNESCAPED_UNICODE);
+

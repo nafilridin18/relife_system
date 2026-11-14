@@ -145,11 +145,33 @@ ReliefX implements strict **Role-Based Access Control (RBAC)** across three dist
 | Username | Password | Role | Description |
 |---|---|---|---|
 | `admin` | `Admin@123` | District Relief Officer | System administrator with full district oversight, fairness governance, and audit trails. |
-| `asha_operator` | `Ngo@123` | Asha Foundation | Field operator for Asha Foundation (relief distributions, stock management, family enrollment). |
-| `relief_operator` | `Ngo@123` | Relief Bangladesh | Field operator for Relief Bangladesh. |
-| `sfv_operator` | `Ngo@123` | Save the Flood Victims | Field operator for Save the Flood Victims. |
+| `asha_operator` | `operator123` | Asha Foundation | Field operator for Asha Foundation (relief distributions, stock management, family enrollment). |
+| `relief_operator` | `operator123` | Relief Bangladesh | Field operator for Relief Bangladesh. |
+| `sfv_operator` | `operator123` | Save the Flood Victims | Field operator for Save the Flood Victims. |
+| `citizen_rahim` | `citizen123` | Citizen / Beneficiary | Registered citizen (Rahim Uddin, NID: `1985011234501`) checking distribution history & 5-day emergency petitions. |
+| *Guest / Public* | *(No login required)* | Public Transparency | 1-click access via "Continue as Guest" to check public area relief logs, flood stages, and AI chat. |
 
-> **Self-Registration for New NGOs:** Any authorized organization can register via `/register_ngo.php`. Upon submitting official details, a 6-digit verification code is generated/emailed and validated on `/verify_email.php` before granting `ngo_operator` privileges.
+> **Self-Registration for New NGOs:** Any authorized organization can register via `/register_ngo.php`. Upon submitting official details, a 6-digit verification code is validated on `/verify_email.php` before granting `ngo_operator` privileges.
+> **Self-Registration for Citizens:** Any citizen can register via `/register_user.php` using their Name, Phone number, and 10 or 17-digit National ID (NID).
+
+### 2.3 Interactive Mapping & AI Helpline Architecture (v3.0.2)
+
+1. **Bangladesh Relief Zone Map (Offline-First Leaflet):**
+   - **Local Assets:** Uses self-contained `css/leaflet.css` and `js/leaflet.js` without external CDN latency or blocking.
+   - **Interactive GPS Locating (`📍 আমার লাইভ GPS অবস্থান`):** Uses HTML5 Geolocation API with high accuracy, rendering a pulsing blue beacon on the user's live coordinates and smoothly flying the viewport to zoom level 13 (`map.flyTo([lat, lng], 13)`).
+   - **National Viewpoint Reset (`🇧🇩 বাংলাদেশ ভিউ`):** 1-click reset button returning to the full Bangladesh central coordinates (`[23.8103, 90.4125]`, Zoom 7).
+   - **Fairness Gauge Markers:** Renders all 8 active relief zones with circle markers color-coded by fairness ratio (Red <0.5×, Amber <1.0×, Green ≥1.0×) and popups displaying population, received aid, and ratio.
+
+2. **AI Helpline Chatbot & 6-Topic FAQ Engine:**
+   - **Same-Origin Proxy Bridge (`api/ai_chat.php`):** Eliminates browser cross-port CORS blocks by communicating on the same HTTP origin, forwarding requests to the Python FastAPI microservice (`http://127.0.0.1:8001`) with automatic fallback to built-in PHP NLP heuristics if the microservice is offline.
+   - **6-Topic Action Chips (Accessible & Responsive):**
+     1. `📦 Relief Eligibility & Rules`: 7-day cooldown rule and automatic database duplicate rejection.
+     2. `🚨 Emergency Rescue / SOS`: Instant emergency triage ticket generation with fire service & armed forces unit assignment.
+     3. `🌊 Weather & Flood Alerts`: Real-time river monitoring stages (Kurigram Dharla, Sunamganj Surma, etc.).
+     4. `👤 Citizen Account Signup`: Step-by-step guidance on creating a citizen profile with NID.
+     5. `⏳ 5-Day Emergency Protocol`: Special expedited relief petition guidelines for families facing acute distress.
+     6. `📞 Emergency Hotlines`: Direct dialing links for 999 (National Emergency), 1090 (Flood/Disaster), 333 (Government Services), and 16163 (Red Crescent).
+   - **Cache-Busted Script Inclusion:** Dynamic version timestamps (`?v=timestamp`) on all assets guarantee immediate browser updates without stale client caching.
 
 ## 3. Complete File Structure
 
@@ -191,6 +213,7 @@ relief_system/
 │   ├── requirements.txt                  ← Python dependencies (fastapi, uvicorn, pydantic)
 │   └── README.md                         ← dedicated microservice architecture documentation
 ├── api/                                  ← AJAX endpoints (CSRF-protected & session-verified)
+│   ├── ai_chat.php                       ← high-reliability AI Chatbot proxy bridge (FastAPI forwarder + offline NLP fallback)
 │   ├── get_weather_alerts.php            ← real-time river stage, danger mark & rainfall station feed (public)
 │   ├── check_duplicate.php               ← live family & 7-day category duplicate check
 │   ├── fuzzy_check.php                   ← Unicode-aware Levenshtein duplicate name detector
