@@ -283,17 +283,43 @@ function initReliefMap(areas, i18n) {
             iconAnchor: [12, 12]
           });
 
-          userGpsMarker = L.marker([lat, lng], { icon: gpsIcon }).addTo(map);
+          // Accuracy note based on PC vs Mobile hardware
+          const isHighPrecision = accuracy <= 500;
+          const accuracyHtml = isHighPrecision
+            ? `<div style="margin-top:6px;padding:5px 8px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);border-radius:6px;font-size:11px;color:#16a34a;">` +
+              `✅ <b>স্যাটেলাইট GPS নির্ভুলতা:</b> ±${accuracy} মিটার (হাই প্রিসিশন)` +
+              `</div>`
+            : `<div style="margin-top:6px;padding:5px 8px;background:rgba(234,179,8,0.12);border:1px solid rgba(234,179,8,0.35);border-radius:6px;font-size:11px;color:#b45309;">` +
+              `ℹ️ <b>পিসি/ব্রডব্যান্ড নেটওয়ার্ক ভিত্তিক আনুমানিক অবস্থান:</b> পিসিতে স্যাটেলাইট জিপিএস চিপ না থাকায় আইএসপি ভিত্তিক এলাকা শনাক্ত হয়েছে। <b>স্মার্টফোনে ওপেন করলে স্যাটেলাইট জিপিএস দিয়ে একদম নিখুঁত ৩-৫ মিটারের মধ্যে পাবেন।</b>` +
+              `</div>`;
+
+          userGpsMarker = L.marker([lat, lng], { icon: gpsIcon, draggable: true }).addTo(map);
           userGpsMarker.bindPopup(
-            `<div style="font-family:sans-serif;font-size:13px;line-height:1.5;">` +
+            `<div style="font-family:sans-serif;font-size:13px;line-height:1.5;max-width:280px;">` +
             `<b style="color:#2563eb;">📍 আপনার লাইভ GPS অবস্থান</b><br>` +
             `অক্ষাংশ (Lat): <b>${lat.toFixed(5)}</b><br>` +
             `দ্রাঘিমাংশ (Lng): <b>${lng.toFixed(5)}</b><br>` +
-            `<small style="color:#64748b;">নির্ভুলতা: ±${accuracy} মিটার</small>` +
+            `<small style="color:#64748b;">রিপোর্টেড অ্যাকুরেসি: ±${accuracy} মিটার</small>` +
+            accuracyHtml +
+            `<div style="margin-top:6px;font-size:10.5px;color:#64748b;">💡 পিনটি টেনে (Drag) সঠিক অবস্থানে বসাতে পারেন।</div>` +
             `</div>`
           ).openPopup();
 
-          map.flyTo([lat, lng], 13, { duration: 1.5 });
+          userGpsMarker.on('dragend', (e) => {
+            const pos = e.target.getLatLng();
+            userGpsMarker.setPopupContent(
+              `<div style="font-family:sans-serif;font-size:13px;line-height:1.5;max-width:280px;">` +
+              `<b style="color:#2563eb;">📍 ম্যানুয়ালি নির্বাচিত অবস্থান</b><br>` +
+              `অক্ষাংশ (Lat): <b>${pos.lat.toFixed(5)}</b><br>` +
+              `দ্রাঘিমাংশ (Lng): <b>${pos.lng.toFixed(5)}</b><br>` +
+              `<div style="margin-top:6px;padding:4px 8px;background:rgba(37,99,235,0.1);border-radius:6px;font-size:11px;color:#2563eb;">` +
+              `🎯 ব্যবহারকারী দ্বারা নিখুঁত অবস্থানে সেট করা হয়েছে।` +
+              `</div>` +
+              `</div>`
+            ).openPopup();
+          });
+
+          map.flyTo([lat, lng], isHighPrecision ? 15 : 13, { duration: 1.5 });
         },
         (err) => {
           btnLocate.disabled = false;
