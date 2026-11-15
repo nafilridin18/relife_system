@@ -124,19 +124,23 @@ ReliefX implements strict **Role-Based Access Control (RBAC)** across three dist
 
 ### 2.1 Role Capabilities & Access Matrix
 
-| Feature / Page | Route | Admin (`admin`) | NGO Operator (`ngo_operator`) | Citizen (Public) |
-|---|---|:---:|:---:|:---:|
-| **Fairness & Operational Dashboard** | `/dashboard.php` | ✅ Full District Overview (All NGOs) | ✅ Tailored (Own NGO Metrics & Stock) | ❌ Restricted |
-| **Relief Distribution Entry** | `/distribute.php` | ✅ Can select ANY NGO | 🔒 Locked to OWN NGO | ❌ Restricted |
-| **Beneficiary Family Registration** | `/register_family.php` | ✅ Enrolls & views summary table | ✅ Enrolls families in field | ❌ Restricted |
-| **All Families Registry** | `/family_list.php` | ✅ Full Database Access | ❌ Restricted | ❌ Restricted |
-| **Duplicate & Lookup Audit Trail** | `/duplicate_log.php` | ✅ Full Security Audit Log | ❌ Restricted | ❌ Restricted |
-| **NGO Warehouse Inventory** | `/stock.php` | ✅ Multi-NGO stock inspection & add | 🔒 Own NGO stock inspection & add | ❌ Restricted |
-| **NGO Organization Profile** | `/profile.php` | ✅ System Admin view | ✅ Upload custom logo & contact phone | ❌ Restricted |
-| **Public NGO Registration & OTP** | `/register_ngo.php` | N/A | ✅ Self-registration + 6-digit OTP | ✅ Open for NGOs |
-| **Weather & Flood Early Warning Alerts** | `/weather_alerts.php` | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
-| **Emergency SOS Rescue Portal** | `/sos_portal.php` | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
-| **AI Helpline Chatbot Assistant** | Floating widget on all pages | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
+| Feature / Page | Route | Admin (`admin`) | NGO Operator (`ngo_operator`) | Citizen (`citizen`) | Guest / Public (`guest`) |
+|---|---|:---:|:---:|:---:|:---:|
+| **Fairness & Operational Dashboard** | `/dashboard.php` | ✅ Full District Overview (All NGOs) | ✅ Tailored (Own NGO Metrics & Stock) | ❌ Restricted | ❌ Restricted |
+| **Relief Distribution Entry** | `/distribute.php` | ✅ Can select ANY NGO | 🔒 Locked to OWN NGO | ❌ Restricted | ❌ Restricted |
+| **Beneficiary Family Registration** | `/register_family.php` | ✅ Enrolls & views summary table | ✅ Enrolls families in field | ❌ Restricted | ❌ Restricted |
+| **All Families Registry** | `/family_list.php` | ✅ Full Database Access | ❌ Restricted | ❌ Restricted | ❌ Restricted |
+| **Duplicate & Lookup Audit Trail** | `/duplicate_log.php` | ✅ Full Security Audit Log | ❌ Restricted | ❌ Restricted | ❌ Restricted |
+| **NGO Warehouse Inventory** | `/stock.php` | ✅ Multi-NGO stock inspection & add | 🔒 Own NGO stock inspection & add | ❌ Restricted | ❌ Restricted |
+| **NGO Organization Profile** | `/profile.php` | ✅ System Admin view | ✅ Upload custom logo & contact phone | ❌ Restricted | ❌ Restricted |
+| **Citizen Self-Portal & History** | `/citizen_dashboard.php` | ❌ Restricted | ❌ Restricted | ✅ Full Relief History & Cooldown | ❌ Restricted |
+| **5-Day Emergency Relief Application** | `/citizen_dashboard.php` | ❌ Restricted | ❌ Restricted | ✅ Submit expedited petition | ❌ Restricted |
+| **Public Relief Transparency Log** | `/guest_dashboard.php` | ✅ Accessible | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
+| **Citizen Account Registration** | `/register_user.php` | N/A | N/A | ✅ Self-signup with NID & Phone | 🌟 **Open Without Login** |
+| **Public NGO Registration & OTP** | `/register_ngo.php` | N/A | ✅ Self-registration + 6-digit OTP | N/A | 🌟 **Open for NGOs** |
+| **Weather & Flood Early Warning Alerts** | `/weather_alerts.php` | ✅ Accessible | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
+| **Emergency SOS Rescue Portal** | `/sos_portal.php` | ✅ Accessible | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
+| **AI Helpline Chatbot Assistant** | Floating widget on all pages | ✅ Accessible | ✅ Accessible | ✅ Accessible | 🌟 **Open Without Login** |
 
 ---
 
@@ -158,7 +162,7 @@ ReliefX implements strict **Role-Based Access Control (RBAC)** across three dist
 
 1. **Bangladesh Relief Zone Map (Offline-First Leaflet):**
    - **Local Assets:** Uses self-contained `css/leaflet.css` and `js/leaflet.js` without external CDN latency or blocking.
-   - **Interactive GPS Locating (`📍 আমার লাইভ GPS অবস্থান`):** Uses HTML5 Geolocation API with high accuracy, rendering a pulsing blue beacon on the user's live coordinates and smoothly flying the viewport to zoom level 13 (`map.flyTo([lat, lng], 13)`).
+   - **Interactive GPS Locating (`📍 আমার লাইভ GPS অবস্থান`):** Uses HTML5 Geolocation API with high accuracy, rendering a pulsing blue beacon on the user's live coordinates and smoothly flying the viewport to zoom level 13 (`map.flyTo([lat, lng], 13)`). Supports draggable pin for manual pinpointing.
    - **National Viewpoint Reset (`🇧🇩 বাংলাদেশ ভিউ`):** 1-click reset button returning to the full Bangladesh central coordinates (`[23.8103, 90.4125]`, Zoom 7).
    - **Fairness Gauge Markers:** Renders all 8 active relief zones with circle markers color-coded by fairness ratio (Red <0.5×, Amber <1.0×, Green ≥1.0×) and popups displaying population, received aid, and ratio.
 
@@ -214,12 +218,12 @@ relief_system/
 │   └── README.md                         ← dedicated microservice architecture documentation
 ├── api/                                  ← AJAX endpoints (CSRF-protected & session-verified)
 │   ├── ai_chat.php                       ← high-reliability AI Chatbot proxy bridge (FastAPI forwarder + offline NLP fallback)
-│   ├── get_weather_alerts.php            ← real-time river stage, danger mark & rainfall station feed (public)
 │   ├── check_duplicate.php               ← live family & 7-day category duplicate check
 │   ├── fuzzy_check.php                   ← Unicode-aware Levenshtein duplicate name detector
-│   ├── save_family.php                   ← family registration with cross-check identity protection
+│   ├── get_weather_alerts.php            ← real-time river stage, danger mark & rainfall station feed (public)
 │   ├── save_distribution.php             ← atomic relief distribution caller for sp_distribute_relief
 │   ├── save_distribution_point.php       ← registers new distribution points associated with an upazila
+│   ├── save_family.php                   ← family registration with cross-check identity protection
 │   ├── save_ngo_profile.php              ← updates NGO contact information & logo file
 │   └── save_stock.php                    ← adds inventory quantity to an NGO-item pair
 ├── css/
@@ -232,19 +236,20 @@ relief_system/
 │   ├── leaflet.js                        ← self-contained local Leaflet interactive map library
 │   └── theme.js                          ← dark/light mode toggle with localStorage persistence
 ├── img/
-│   ├── logo-icon.png                     ← circular ReliefX brand emblem & favicon
-│   ├── logo-full.jpeg                    ← full ReliefX emblem and typography wordmark
 │   ├── dashboard-preview.png             ← fairness dashboard UI mock preview
-│   └── distribute-preview.png            ← relief entry workflow UI mock preview
+│   ├── distribute-preview.png            ← relief entry workflow UI mock preview
+│   ├── logo-full.jpeg                    ← full ReliefX emblem and typography wordmark
+│   └── logo-icon.png                     ← circular ReliefX brand emblem & favicon
 └── includes/
     ├── auth.php                          ← RBAC enforcement, session authentication, CSRF protection
     ├── auth_brand.php                    ← unified layout wrapper for authentication pages
     ├── env.php                           ← lightweight .env parser without external dependencies
-    ├── header.php                        ← global navigation bar, language switcher & CSRF bridge
     ├── footer.php                        ← global footer & base script inclusions
+    ├── header.php                        ← global navigation bar, language switcher & CSRF bridge
     ├── icons.php                         ← lightweight SVG icon renderer (Feather icon set)
     ├── lang.php                          ← bilingual translation engine (UI + dynamic database entities)
     ├── mailer.php                        ← SMTP email helper for verification & password reset codes
+    ├── weather_data.php                  ← hydrological river monitoring stations dataset & calculation logic
     └── PHPMailer/                        ← embedded PHPMailer library
         ├── Exception.php
         ├── PHPMailer.php
